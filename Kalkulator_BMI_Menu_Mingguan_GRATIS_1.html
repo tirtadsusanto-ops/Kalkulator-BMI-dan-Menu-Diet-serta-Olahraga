@@ -1,0 +1,2457 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Kalkulator BMI &amp; Penyusun Menu Mingguan</title>
+<style>
+  :root{
+    --ink:#10241f; --paper:#f6f4ee; --card:#ffffff;
+    --green:#1f5d4c; --green-dk:#143f33; --green-lt:#e7f1ec;
+    --gold:#b8893b; --gold-lt:#f6edda;
+    --red:#c0392b; --red-bg:#fbe9e7;
+    --line:#d8d2c4; --muted:#6b7d77;
+    --shadow:0 6px 24px rgba(20,63,51,.10);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:rgba(31,93,76,.15);}
+  html,body{margin:0;padding:0;-webkit-text-size-adjust:100%;}
+  button,.toggle,.seg label{cursor:pointer;-webkit-user-select:none;user-select:none;touch-action:manipulation;}
+  input,select,textarea{-webkit-appearance:none;appearance:none;border-radius:10px;}
+  input[type=date]{-webkit-appearance:none;min-height:42px;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper); color:var(--ink); line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:18px 16px 80px;}
+  /* Watermark */
+  .watermark{
+    position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .watermark span{
+    font-size:clamp(22px,4vw,40px); font-weight:800; color:rgba(31,93,76,.06);
+    transform:rotate(-30deg); white-space:nowrap; letter-spacing:1px;
+    user-select:none;
+  }
+  .wm-tile{position:fixed;inset:-20% -20% -20% -20%;z-index:0;pointer-events:none;
+    background-repeat:repeat; opacity:1;}
+  .content{position:relative;z-index:1;}
+  header.app{
+    background:linear-gradient(135deg,var(--green-dk),var(--green));
+    color:#fff; border-radius:18px; padding:22px 24px; box-shadow:var(--shadow);
+    display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;
+  }
+  header.app h1{margin:0;font-size:clamp(20px,3.2vw,28px);letter-spacing:.2px;}
+  header.app p{margin:6px 0 0;opacity:.9;font-size:14px;max-width:560px;}
+  .age-badge{display:inline-block;margin:10px 0 2px;background:var(--gold);color:#fff;font-weight:800;
+    font-size:13.5px;letter-spacing:.3px;padding:7px 14px;border-radius:999px;
+    box-shadow:0 3px 10px rgba(184,137,59,.4);animation:badgePulse 1.8s ease-in-out infinite;}
+  @keyframes badgePulse{0%,100%{transform:scale(1);box-shadow:0 3px 10px rgba(184,137,59,.4);}50%{transform:scale(1.03);box-shadow:0 5px 16px rgba(184,137,59,.6);}}
+  .lang-toggle{display:flex;background:rgba(255,255,255,.14);border-radius:999px;padding:4px;gap:4px;}
+  .free-badge{
+    display:inline-block;background:#ffd54a;color:#5a4419;font-weight:900;font-size:14px;
+    letter-spacing:1.2px;padding:4px 14px;border-radius:999px;margin-bottom:8px;
+    box-shadow:0 2px 6px rgba(0,0,0,.18);
+  }
+  .free-notice{
+    background:#c62828;color:#fff;border-radius:16px;padding:22px 24px;margin:18px 0;
+    border:3px solid #8e0000;box-shadow:0 6px 18px rgba(198,40,40,.35);
+    font-size:16px;line-height:1.65;font-weight:600;text-align:justify;
+  }
+  .free-notice strong{color:#fff;font-weight:900;}
+  /* when the diet-adjustment box is covered by the notice, drop its own gold styling */
+  .notes-box.free-cover{background:none;border:0;border-radius:0;padding:0;}
+  .notes-box.free-cover .free-notice{margin:10px 0 0;font-size:15px;}
+  .lang-col{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+  .lang-wm{font-size:11px;font-weight:700;color:rgba(255,255,255,.9);letter-spacing:.2px;text-align:right;line-height:1.3;}
+  @media(max-width:520px){ .lang-col{align-items:flex-start;} .lang-wm{text-align:left;} }
+  .lang-toggle button{
+    border:0;background:transparent;color:#fff;padding:7px 16px;border-radius:999px;
+    cursor:pointer;font-weight:700;font-size:13px;transition:.18s;
+  }
+  .lang-toggle button.active{background:#fff;color:var(--green-dk);}
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:16px;
+    padding:22px 22px; margin-top:18px; box-shadow:var(--shadow);
+  }
+  .card h2{
+    margin:0 0 4px; font-size:18px; color:var(--green-dk);
+    display:flex;align-items:center;gap:10px;
+  }
+  .card h2 .num{
+    background:var(--green); color:#fff; width:28px;height:28px;border-radius:8px;
+    display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex:0 0 auto;
+  }
+  .card .sub{color:var(--muted);font-size:13px;margin:0 0 16px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+  label{display:block;font-size:13px;font-weight:600;margin-bottom:5px;color:var(--green-dk);}
+  input[type=text],input[type=tel],input[type=number],input[type=date],select,textarea{
+    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;
+    font-size:15px;font-family:inherit;background:#fff;color:var(--ink);transition:.15s;
+  }
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px var(--green-lt);}
+  textarea{resize:vertical;min-height:60px;}
+  .seg{display:flex;gap:8px;}
+  .seg label{flex:1;margin:0;}
+  .seg input{display:none;}
+  .seg span{
+    display:block;text-align:center;padding:10px;border:1px solid var(--line);border-radius:10px;
+    cursor:pointer;font-weight:600;font-size:14px;color:var(--muted);background:#fff;transition:.15s;
+  }
+  .seg input:checked + span{background:var(--green);color:#fff;border-color:var(--green);}
+  .disease-toggles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:6px;}
+  .toggle{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:#fff;cursor:pointer;transition:.15s;
+  }
+  .toggle.on{border-color:var(--green);background:var(--green-lt);}
+  .toggle .t-name{font-size:14px;font-weight:600;color:var(--green-dk);}
+  .switch{width:42px;height:24px;border-radius:999px;background:#cfd8d4;position:relative;flex:0 0 auto;transition:.18s;}
+  .toggle.on .switch{background:var(--green);}
+  .switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.18s;}
+  .toggle.on .switch::after{left:21px;}
+  .btn{
+    background:var(--green);color:#fff;border:0;border-radius:12px;padding:14px 26px;
+    font-size:16px;font-weight:700;cursor:pointer;transition:.18s;box-shadow:var(--shadow);
+  }
+  .btn:hover{background:var(--green-dk);}
+  .btn.secondary{background:#fff;color:var(--green-dk);border:1px solid var(--green);box-shadow:none;}
+  .btn-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;}
+  /* Results */
+  .bmi-banner{border-radius:14px;padding:18px;margin-top:8px;text-align:center;font-weight:700;}
+  .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-top:14px;}
+  .metric{background:var(--green-lt);border-radius:12px;padding:14px;text-align:center;}
+  .metric .v{font-size:24px;font-weight:800;color:var(--green-dk);}
+  .metric .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:2px;}
+  .alert-central{
+    background:var(--red);color:#fff;border-radius:14px;padding:18px 20px;margin-top:14px;
+    text-align:center;font-weight:800;font-size:18px;letter-spacing:.3px;
+    box-shadow:0 8px 22px rgba(192,57,43,.34);
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.015);}}
+  .macro-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:6px;}
+  .macro{border-radius:12px;padding:14px;text-align:center;color:#fff;}
+  .macro.cal{background:var(--green-dk);}
+  .macro.pro{background:#2e6f5e;}
+  .macro.fat{background:var(--gold);}
+  .macro.carb{background:#5b8a3c;}
+  .macro .v{font-size:22px;font-weight:800;}
+  .macro .l{font-size:12px;opacity:.9;margin-top:2px;}
+  /* Week plan */
+  .day-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+  .day-tabs button{
+    border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 14px;cursor:pointer;
+    font-weight:600;font-size:13px;color:var(--muted);transition:.15s;
+  }
+  .day-tabs button.active{background:var(--green);color:#fff;border-color:var(--green);}
+  .meal{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px;background:#fff;}
+  .meal h4{margin:0 0 8px;color:var(--green-dk);font-size:15px;display:flex;align-items:center;gap:8px;}
+  .meal h4 .tag{background:var(--gold-lt);color:var(--gold);font-size:11px;padding:2px 9px;border-radius:999px;font-weight:700;}
+  .meal ul{margin:0;padding-left:18px;}
+  .meal li{font-size:14px;margin:3px 0;}
+  .meal .kcal{float:right;color:var(--muted);font-size:13px;font-weight:600;}
+  .day-summary{background:var(--green-lt);border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:var(--green-dk);}
+  .notes-box{background:var(--gold-lt);border-left:4px solid var(--gold);border-radius:10px;padding:12px 16px;margin-top:10px;font-size:13px;}
+  .notes-box b{color:var(--gold);}
+  .ix{border-radius:11px;padding:12px 16px;margin-bottom:10px;font-size:14px;border-left:4px solid;}
+  .ix.info{background:#eef4f7;border-color:#2e75b6;}
+  .ix.caution{background:var(--gold-lt);border-color:var(--gold);}
+  .ix.serious{background:var(--red-bg);border-color:var(--red);}
+  .ix .sev{font-weight:800;text-transform:uppercase;font-size:11px;letter-spacing:.5px;margin-right:6px;}
+  .ix.info .sev{color:#2e75b6;} .ix.caution .sev{color:var(--gold);} .ix.serious .sev{color:var(--red);}
+  .ix-none{color:var(--muted);font-size:14px;font-style:italic;}
+  .req{color:var(--red);font-weight:800;font-size:11px;margin-left:6px;white-space:nowrap;}
+  .who-note{background:var(--green-lt);border-left:4px solid var(--green);border-radius:8px;padding:8px 12px;margin-top:10px;font-size:12.5px;color:var(--green-dk);font-weight:600;}
+  .sec-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
+  .sec-item{flex:1 1 150px;background:var(--green-lt);border:1px solid #cfe3d9;border-radius:10px;padding:9px 12px;text-align:center;}
+  .sec-item b{display:block;font-size:17px;color:var(--green-dk);font-weight:800;}
+  .sec-item span{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .reflist{margin:0;padding-left:22px;font-size:12px;color:var(--ink);line-height:1.5;}
+  .energy-box{background:var(--gold-lt);border:1px solid var(--gold);border-radius:10px;padding:12px 14px;margin:8px 0 14px;font-size:13px;color:#7a5a1e;line-height:1.55;}
+  .energy-box .eb-row{display:flex;justify-content:space-between;gap:10px;padding:3px 0;}
+  .energy-box .eb-row b{color:#5c4415;}
+  .ex-table{width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0;}
+  .ex-table th,.ex-table td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top;}
+  .ex-table th{background:var(--green-lt);color:var(--green-dk);font-weight:700;}
+  .ex-table td.kcal{font-weight:700;color:var(--green-dk);white-space:nowrap;text-align:right;}
+  .ex-cat{margin-top:12px;font-weight:700;color:var(--green-dk);font-size:13.5px;}
+  .ex-badge{display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;margin-left:6px;}
+  .ex-badge.low{background:#e6f4ea;color:#1f7a4d;}
+  .ex-badge.mod{background:#fff4e0;color:#a8760f;}
+  .ex-badge.high{background:#fde8e8;color:#c0392b;}
+  .reflist li{margin-bottom:7px;}
+  .reflist a{color:var(--green);word-break:break-all;}
+  .hidden{display:none;}
+  .disclaimer{
+    margin-top:26px;border:1px solid var(--line);border-radius:14px;padding:18px 20px;background:#fff;font-size:13px;color:var(--ink);
+  }
+  .disclaimer .warn{color:var(--red);font-weight:700;}
+  .err{color:var(--red);font-size:13px;margin-top:8px;font-weight:600;}
+  footer.sig{text-align:center;color:var(--muted);font-size:12px;margin-top:22px;}
+  @media (max-width:560px){.wrap{padding:12px 10px 70px;}.card{padding:18px 16px;}}
+  @media print{.btn,.lang-toggle,.day-tabs{display:none;}.watermark span{color:rgba(31,93,76,.12);}}
+</style>
+</head>
+<body>
+<div class="wm-tile" id="wmTile"></div>
+<div class="wrap">
+<div class="content">
+
+  <header class="app">
+    <div>
+      <div class="free-badge" id="freeBadge">(GRATIS)</div>
+      <h1 id="appTitle">Kalkulator BMI &amp; Penyusun Menu Mingguan</h1>
+      <div class="age-badge" id="ageBadge">Perhitungan BMI dan Penyusunan Menu serta saran latihan fisik (olah raga) untuk usia 17 tahun atau lebih (Dewasa dan Lansia).</div>
+      <p id="appSub">Berdasarkan kriteria WHO Asia-Pasifik dan rumus Harris-Benedict. Bekerja sepenuhnya luring (offline).</p>
+    </div>
+    <div class="lang-col">
+      <div class="lang-toggle">
+        <button id="btnID" class="active">Indonesia</button>
+        <button id="btnEN">English</button>
+      </div>
+      <div class="lang-wm">Dr.dr. Tirta Darmawan Susanto, MKes</div>
+    </div>
+  </header>
+
+  <div id="iosHint" style="display:none;background:#fff4d6;border:1px solid #b8893b;border-radius:12px;padding:12px 16px;margin-top:14px;font-size:13px;color:#5a4419;">
+    <b id="iosHintT">Catatan untuk pengguna iPhone:</b> <span id="iosHintB">Jika tombol tidak merespons, buka berkas ini di <b>Safari</b> \u2014 ketuk ikon Bagikan lalu pilih \u201cBuka di Safari\u201d. Tampilan pratinjau (Quick Look) tidak menjalankan tombol.</span>
+  </div>
+
+  <!-- SECTION 1: IDENTITY & ANTHROPOMETRY -->
+  <div class="card">
+    <h2><span class="num">1</span><span id="s1Title">Data Diri &amp; Antropometri</span></h2>
+    <p class="sub" id="s1Sub">Lengkapi data berikut untuk menghitung BMI dan kebutuhan gizi Anda.</p>
+    <div class="grid">
+      <div><label id="lName">Nama<span class="req" data-req>wajib diisi/dipilih</span></label><input type="text" id="name" placeholder=""></div>
+      <div><label id="lDob">Tanggal Lahir<span class="req" data-req>wajib diisi/dipilih</span></label><input type="date" id="dob"></div>
+      <div><label id="lAge">Umur (tahun)<span class="req" data-req>wajib diisi/dipilih</span></label><input type="number" inputmode="numeric" id="age" min="1" max="120" placeholder=""></div>
+      <div><label id="lPhone">Nomor HP / WA<span class="req" data-req>wajib diisi/dipilih</span></label><input type="tel" inputmode="tel" id="phone" placeholder=""></div>
+      <div><label id="lHeight">Tinggi Badan (cm)<span class="req" data-req>wajib diisi/dipilih</span></label><input type="number" inputmode="decimal" id="height" min="50" max="250" step="0.1"></div>
+      <div><label id="lWeight">Berat Badan (kg)<span class="req" data-req>wajib diisi/dipilih</span></label><input type="number" inputmode="decimal" id="weight" min="10" max="400" step="0.1"></div>
+      <div><label id="lWaist">Lingkar Perut (cm)<span class="req" data-req>wajib diisi/dipilih</span></label><input type="number" inputmode="decimal" id="waist" min="30" max="250" step="0.1"></div>
+      <div>
+        <label id="lSex">Jenis Kelamin<span class="req" data-req>wajib diisi/dipilih</span></label>
+        <div class="seg">
+          <label><input type="radio" name="sex" value="M" checked><span id="lMale">Laki-laki</span></label>
+          <label><input type="radio" name="sex" value="F"><span id="lFemale">Perempuan</span></label>
+        </div>
+      </div>
+      <div>
+        <label id="lActivity">Tingkat Aktivitas</label>
+        <select id="activity">
+          <option value="1.2" id="actSed">Sedentari (rawat / minimal)</option>
+          <option value="1.375" id="actLight">Ringan (1-3x/minggu)</option>
+          <option value="1.55" selected id="actMod">Sedang (3-5x/minggu)</option>
+          <option value="1.725" id="actHeavy">Berat (6-7x/minggu)</option>
+          <option value="1.9" id="actVery">Sangat berat (atlet)</option>
+        </select>
+      </div>
+      <div style="grid-column:1/-1">
+        <label id="lGoal">Tujuan Penyusunan Menu<span class="req" data-req>wajib diisi/dipilih</span></label>
+        <div class="seg">
+          <label><input type="radio" name="goal" value="maintain" checked><span id="goalMaintainOpt">Pemeliharaan Berat Badan</span></label>
+          <label><input type="radio" name="goal" value="loss"><span id="goalLossOpt">Turunkan Lemak Viseral &amp; Naikkan Massa Otot</span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: PREFERENCES, MEDS, DISEASES -->
+  <div class="card">
+    <h2><span class="num">2</span><span id="s2Title">Preferensi, Obat &amp; Penyakit</span></h2>
+    <p class="sub" id="s2Sub">Informasi ini digunakan untuk menyesuaikan menu dan perhitungan gizi Anda.</p>
+    <div class="grid">
+      <div><label id="lLike">Makanan yang Disukai</label><textarea id="liked" placeholder=""></textarea></div>
+      <div><label id="lDislike">Makanan yang Tidak Disukai</label><textarea id="disliked" placeholder=""></textarea></div>
+      <div><label id="lMeds">Obat yang Sedang Diminum</label><textarea id="meds" placeholder=""></textarea></div>
+    </div>
+    <label style="margin-top:16px" id="lDisease">Penyakit yang Diderita</label>
+    <div class="disease-toggles" id="diseaseToggles">
+      <div class="toggle" data-key="dm"><span class="t-name" id="dDM">Kencing Manis (Diabetes)</span><span class="switch"></span></div>
+      <div class="toggle" data-key="htn"><span class="t-name" id="dHTN">Hipertensi (Darah Tinggi)</span><span class="switch"></span></div>
+      <div class="toggle" data-key="stroke_h"><span class="t-name" id="dSH">Stroke Perdarahan</span><span class="switch"></span></div>
+      <div class="toggle" data-key="stroke_i"><span class="t-name" id="dSI">Stroke Penyumbatan</span><span class="switch"></span></div>
+      <div class="toggle" data-key="cad"><span class="t-name" id="dCAD">Serangan Jantung</span><span class="switch"></span></div>
+      <div class="toggle" data-key="kidney"><span class="t-name" id="dKID">Gangguan Ginjal</span><span class="switch"></span></div>
+    </div>
+    <div class="grid" style="margin-top:12px">
+      <div><label id="lOther1">Penyakit Lain 1</label><input type="text" id="other1"></div>
+      <div><label id="lOther2">Penyakit Lain 2</label><input type="text" id="other2"></div>
+      <div><label id="lOther3">Penyakit Lain 3</label><input type="text" id="other3"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="btnCalc" type="button">Hitung &amp; Susun Menu</button>
+      <button class="btn secondary" id="btnReset" type="button">Reset</button>
+    </div>
+    <div class="err hidden" id="errMsg"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="card hidden" id="resultCard">
+    <h2><span class="num">3</span><span id="s3Title">Hasil Penilaian</span></h2>
+    <div class="bmi-banner" id="bmiBanner"></div>
+    <div class="who-note" id="whoNote">Catatan: BMI menggunakan Kriteria WHO untuk Asia-Pasifik.</div>
+    <div class="metric-grid" id="metricGrid"></div>
+    <div id="centralAlert"></div>
+  </div>
+
+  <!-- DAILY NEEDS -->
+  <div class="card hidden" id="needsCard">
+    <h2><span class="num">4</span><span id="s4Title">Kebutuhan Gizi Harian</span></h2>
+    <p class="sub" id="s4Sub"></p>
+    <div class="macro-grid" id="macroGrid"></div>
+    <div class="sec-grid" id="secondaryTargets"></div>
+    <div class="notes-box" id="adjustNotes"></div>
+  </div>
+
+  <!-- FREE-VERSION NOTICE (replaces diet adjustment through 7-day menu) -->
+  <div class="free-notice hidden" id="freeNotice"></div>
+
+  <!-- DRUG INTERACTIONS -->
+  <div class="card hidden" id="interactionCard">
+    <h2><span class="num">5</span><span id="s6Title">Interaksi Obat &amp; Catatan Keamanan</span></h2>
+    <p class="sub" id="s6Sub">Kemungkinan interaksi antara obat yang Anda minum dengan makanan maupun obat lain.</p>
+    <div class="who-note hidden" id="drugRecogBox"></div>
+    <div id="interactionList"></div>
+  </div>
+
+  <!-- WEEK PLAN -->
+  <div class="card hidden" id="planCard">
+    <h2><span class="num">6</span><span id="s5Title">Menu 7 Hari</span></h2>
+    <p class="sub" id="s5Sub">Menu bervariasi setiap hari, mengutamakan makanan yang Anda sukai dan menghindari yang tidak disukai.</p>
+    <div class="who-note hidden" id="elderlyMenuNote"></div>
+    <div class="day-tabs" id="dayTabs"></div>
+    <div id="dayContent"></div>
+    <div class="btn-row">
+      <button class="btn" id="btnRegen" type="button">\u21bb Susun Variasi Makanan Lain</button>
+    </div>
+  </div>
+
+  <!-- EXERCISE / PHYSICAL ACTIVITY -->
+  <div class="card hidden" id="exerciseCard">
+    <h2><span class="num">7</span><span id="exTitle">Latihan Fisik yang Disarankan</span></h2>
+    <p class="sub" id="exSub">Latihan disesuaikan dengan target kalori, BMI, obesitas sentral, penyakit, obat, dan tujuan Anda. Estimasi kalori dihitung dengan rumus MET \u00d7 berat badan (kg) \u00d7 durasi (jam) berdasarkan 2011 Compendium of Physical Activities.</p>
+    <div id="exEnergyBox" class="energy-box"></div>
+    <div id="exContent"></div>
+    <div class="who-note" id="exSafetyNote"></div>
+    <div class="btn-row">
+      <button class="btn" id="btnRegenEx" type="button">\u21bb Sarankan Variasi Latihan Lain</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="btnPDF" type="button">\u2b07 Unduh PDF</button>
+      <button class="btn secondary" id="btnJPEG" type="button">\u2b07 Unduh JPEG</button>
+    </div>
+  </div>
+
+  <!-- DISCLAIMER -->
+  <!-- REFERENCE LIST -->
+  <div class="card" id="refCard">
+    <h2><span class="num">R</span><span id="refTitle">Daftar Referensi</span></h2>
+    <p class="sub" id="refIntro">Seluruh teori, dasar perhitungan, interpretasi, dan penyusunan menu mengacu pada buku dan artikel berikut (DOI terverifikasi, terindeks Scopus/PubMed):</p>
+    <ol class="reflist" id="refList"></ol>
+  </div>
+
+  <div class="disclaimer" id="disclaimer">
+    <span id="discText">Penyusun menu ini hanya untuk membantu mempermudah pemilihan menu bagi awam dan bukan pengganti penilaian serta saran profesional.</span><br><br>
+    <span class="warn" id="discWarn">PERHATIAN: pada penderita penyakit tertentu serta meminum obat-obat rutin tertentu tetap wajib konsultasi ke dokter keluarga dan atau dokter spesialis Gizi Klinik.</span>
+  </div>
+
+  <footer class="sig">Dr.dr.Tirta Darmawan Susanto, MKes<br>HP/WA: 08156074978 &nbsp;&middot;&nbsp; IG: tirta_susanto &nbsp;&middot;&nbsp; TikTok: tirta.d.susanto</footer>
+
+</div>
+</div>
+
+<script>
+/* ============================================================
+   WATERMARK (repeating tiled)
+============================================================ */
+(function(){
+ try{
+  const c = document.createElement('canvas');
+  c.width = 520; c.height = 260;
+  const ctx = c.getContext('2d');
+  ctx.translate(260,130); ctx.rotate(-Math.PI/7);
+  ctx.fillStyle = "rgba(31,93,76,0.07)";
+  ctx.textAlign = "center";
+  ctx.font = "700 16px -apple-system,Segoe UI,Arial";
+  ctx.fillText("Dr.dr.Tirta Darmawan Susanto, MKes", 0, -10);
+  ctx.font = "600 11px -apple-system,Segoe UI,Arial";
+  ctx.fillText("HP/WA 08156074978 · IG tirta_susanto", 0, 10);
+  ctx.fillText("TikTok tirta.d.susanto", 0, 26);
+  const el = document.getElementById('wmTile');
+  if(el) el.style.backgroundImage = "url("+c.toDataURL()+")";
+ }catch(e){ /* watermark is decorative; never block the app on iOS */ }
+})();
+
+/* ============================================================
+   I18N
+============================================================ */
+const I18N = {
+  id:{
+    appTitle:"Kalkulator BMI & Penyusun Menu Mingguan",
+    appSub:"Berdasarkan kriteria WHO Asia-Pasifik dan rumus Harris-Benedict. Bekerja sepenuhnya luring (offline).",
+    ageBadge:"Perhitungan BMI dan Penyusunan Menu serta saran latihan fisik (olah raga) untuk usia 17 tahun atau lebih (Dewasa dan Lansia).",
+    s1Title:"Data Diri & Antropometri", s1Sub:"Lengkapi data berikut untuk menghitung BMI dan kebutuhan gizi Anda.",
+    lName:"Nama", lDob:"Tanggal Lahir", lAge:"Umur (tahun)", lPhone:"Nomor HP / WA",
+    lHeight:"Tinggi Badan (cm)", lWeight:"Berat Badan (kg)", lWaist:"Lingkar Perut (cm)",
+    lSex:"Jenis Kelamin", lMale:"Laki-laki", lFemale:"Perempuan", lActivity:"Tingkat Aktivitas",
+    actSed:"Sedentari (rawat / minimal)", actLight:"Ringan (1-3x/minggu)", actMod:"Sedang (3-5x/minggu)",
+    actHeavy:"Berat (6-7x/minggu)", actVery:"Sangat berat (atlet)",
+    s2Title:"Preferensi, Obat & Penyakit", s2Sub:"Informasi ini digunakan untuk menyesuaikan menu dan perhitungan gizi Anda.",
+    lLike:"Makanan yang Disukai", lDislike:"Makanan yang Tidak Disukai", lMeds:"Obat yang Sedang Diminum",
+    lDisease:"Penyakit yang Diderita",
+    dDM:"Kencing Manis (Diabetes)", dHTN:"Hipertensi (Darah Tinggi)", dSH:"Stroke Perdarahan",
+    dSI:"Stroke Penyumbatan", dCAD:"Serangan Jantung", dKID:"Gangguan Ginjal",
+    lOther1:"Penyakit Lain 1", lOther2:"Penyakit Lain 2", lOther3:"Penyakit Lain 3",
+    btnCalc:"Hitung & Susun Menu", btnReset:"Reset",
+    s3Title:"Hasil Penilaian", s4Title:"Kebutuhan Gizi Harian", s5Title:"Menu 7 Hari",
+    s6Title:"Interaksi Obat & Catatan Keamanan",
+    s6Sub:"Kemungkinan interaksi antara obat yang Anda minum dengan makanan maupun obat lain.",
+    fiberLbl:"Serat per hari", fluidLbl:"Cairan per hari", sodiumLbl:"Natrium (garam) per hari",
+    fluidCheck:"(sesuaikan dengan anjuran dokter)",
+    freeBadge:"(GRATIS)",
+    freeNotice:"Versi ini hanya dapat menciptakan menu makanan untuk memelihara berat badan (mencegah agar tidak naik lagi), karena untuk penurunan Berat Badan dan Lemak viseral <strong>YANG AMAN</strong> perlu <strong>DIPANTAU</strong> dan dalam evaluasi oleh dokter atau coach yang terlatih. Untuk mendapatkan aplikasi <strong>FULL version</strong> yang dapat menciptakan menu untuk menurunkan lemak visceral dan menaikkan massa otot, Anda perlu menghubungi pengundang Anda atau yang memberikan kepada Anda aplikasi ini untuk <strong>JOIN</strong> dengan Program Pemantauan dan Mentoring kami.",
+    drugRecog:"Bahan aktif obat yang dikenali dari tulisan Anda (merek dagang otomatis dicarikan isi bahan aktifnya):",
+    sevInfo:"Info", sevCaution:"Perhatian", sevSerious:"Penting",
+    ixNone:"Tidak ada obat yang dimasukkan, atau tidak terdeteksi interaksi yang perlu disorot. Tetap konsultasikan obat Anda ke dokter atau apoteker.",
+    btnPDF:"\u2b07 Unduh PDF", btnJPEG:"\u2b07 Unduh JPEG",
+    btnRegen:"\u21bb Susun Variasi Makanan Lain",
+    exTitle:"Latihan Fisik yang Disarankan",
+    exSub:"Latihan disesuaikan dengan target kalori, BMI, obesitas sentral, penyakit, obat, dan tujuan Anda. Estimasi kalori dihitung dengan rumus MET \u00d7 berat badan (kg) \u00d7 durasi (jam) berdasarkan 2011 Compendium of Physical Activities.",
+    btnRegenEx:"\u21bb Sarankan Variasi Latihan Lain",
+    ebBMR:"Metabolisme Basal (BMR)",
+    ebTDEE:"Pengeluaran Harian Total (TDEE, BMR \u00d7 aktivitas)",
+    ebIntake:"Asupan dari menu makanan (target)",
+    ebExercise:"Tambahan pembakaran dari latihan (rata-rata/hari)",
+    ebTotalOut:"Total pengeluaran (TDEE + latihan)",
+    ebNet:"Keseimbangan energi (asupan \u2212 pengeluaran)",
+    ebExplLoss:"Nilai negatif menunjukkan defisit energi harian yang mendorong penurunan lemak tubuh (terutama lemak viseral) sambil mempertahankan/menaikkan massa otot melalui latihan resistensi.",
+    ebExplMaintain:"Untuk pemeliharaan berat badan, asupan diseimbangkan dengan pengeluaran; latihan tetap dianjurkan untuk kesehatan kardiometabolik dan mempertahankan massa otot.",
+    kcalDay:"kkal/hari",
+    exAerobic:"Latihan Kardio / Aerobik",
+    exStrength:"Latihan Kekuatan / Otot",
+    exBalance:"Latihan Keseimbangan (pencegahan jatuh)",
+    exFlexibility:"Latihan Fleksibilitas / Peregangan",
+    exDaily:"setiap hari",
+    exDaysWk:"hari/minggu",
+    exType:"Jenis Latihan",
+    exDur:"Durasi",
+    exKcal:"Kalori",
+    exMin:"menit",
+    exKcalMin:"kkal/menit (terukur)",
+    impLow:"dampak rendah",
+    impMod:"dampak sedang",
+    impHigh:"dampak tinggi",
+    exNoteCV:"Karena ada riwayat penyakit jantung/stroke, latihan berdampak tinggi dan HIIT dihindari; wajib skrining kardiovaskular dan pengawasan dokter sebelum memulai.",
+    exNoteHTN:"Pada hipertensi, hindari menahan napas (manuver Valsalva) saat mengangkat beban; utamakan intensitas sedang.",
+    exNoteRenal:"Pada gangguan ginjal/risiko hiperkalemia, hindari latihan intensitas sangat tinggi; pilih intensitas ringan-sedang.",
+    exNoteHypoG:"Karena menggunakan insulin/sulfonilurea, pantau gula darah sebelum dan sesudah latihan serta sediakan sumber karbohidrat untuk mencegah hipoglikemia.",
+    exNoteDM:"Pada diabetes, utamakan latihan berdampak rendah dan periksa kaki sebelum/sesudah latihan.",
+    exNoteElderly:"Untuk usia lanjut (\u226560 th), diterapkan 4 pilar gerak lansia: aerobik ringan (jalan bertahap), penguatan otot untuk cegah sarkopenia (squat kursi, wall push-up, angkat tumit), keseimbangan untuk cegah jatuh (bukti Cochrane), dan peregangan/fleksibilitas harian. Mulai pelan, tambah bertahap; pakai \u201ctes bicara\u201d \u2014 bila masih bisa bicara kalimat penuh, intensitas sudah tepat.",
+    exNoteGeneral:"Rekomendasi bersifat umum; sesuaikan secara individual bersama dokter atau spesialis kedokteran olahraga.",
+    whoNote:"Catatan: BMI menggunakan Kriteria WHO untuk Asia-Pasifik.",
+    refTitle:"Daftar Referensi",
+    refIntro:"Seluruh teori, dasar perhitungan, interpretasi, dan penyusunan menu mengacu pada buku dan artikel berikut (DOI terverifikasi, terindeks Scopus/PubMed):",
+    reportTitle:"Laporan Gizi & Menu Mingguan", reportDate:"Tanggal",
+    pPatient:"Data Pasien", pName:"Nama", pAge:"Umur", pSex:"Jenis Kelamin", pPhone:"HP/WA",
+    pH:"Tinggi", pW:"Berat", pWaist:"Lingkar Perut", yr:"tahun",
+    rNeeds:"Kebutuhan Gizi Harian", rAdjust:"Penyesuaian Diet", rIx:"Interaksi Obat", rMenu:"Menu 7 Hari",
+    s5Sub:"Menu bervariasi setiap hari, mengutamakan makanan yang Anda sukai dan menghindari yang tidak disukai.",
+    elderlyMenuNote:"Penyesuaian Lansia (\u226560 th): menu mengutamakan pola \u201cDiet MIND\u201d penyehat otak (sayuran hijau, ikan berlemak, tempe/tahu, buah beri/antioksidan, biji-bijian utuh), tekstur lebih lembut & mudah dikunyah (mengatasi nafsu makan turun), serta protein lebih tinggi (1,2 g/kg) untuk mencegah penyusutan otot (sarkopenia). Disarankan makan porsi kecil tapi sering (5\u20136x/hari) dan gunakan bumbu alami (bawang putih, jahe, kunyit, perasan jeruk nipis) untuk menambah selera. Batasi gorengan, makanan olahan, dan camilan manis.",
+    placeLike:"mis. ayam, ikan, tahu, pisang, bayam",
+    placeDislike:"mis. jeroan, durian",
+    placeMeds:"mis. metformin, amlodipin, warfarin",
+    central:"OBESITAS SENTRAL", centralSub:"Lingkar perut melebihi batas WHO Asia-Pasifik",
+    bmiLabels:{under:"Berat Kurang",normal:"Normal",over:"Berisiko / Overweight",ob1:"Obesitas I",ob2:"Obesitas II"},
+    mBMI:"BMI", mCat:"Kategori", mBBI:"Berat Ideal", mABW:"Berat Disesuaikan", mBMR:"BMR",
+    cal:"Kalori", pro:"Protein", fat:"Lemak", carb:"Karbohidrat", perDay:"/hari",
+    needsSub:(g)=>`Target harian dihitung dari rumus Harris-Benedict dengan faktor aktivitas dan penyesuaian penyakit. Tujuan berat badan: ${g}.`,
+    goalLose:"penurunan berat badan bertahap", goalMaintain:"pemeliharaan berat badan", goalGain:"peningkatan berat badan",
+    goalRecomp:"penurunan lemak viseral & peningkatan massa otot",
+    lGoal:"Tujuan Penyusunan Menu", goalMaintainOpt:"Pemeliharaan Berat Badan",
+    goalLossOpt:"Turunkan Lemak Viseral & Naikkan Massa Otot",
+    gramNote:"Berat dalam gram adalah jumlah matang/siap santap yang sudah disesuaikan dengan target kalori harian Anda; URT adalah ukuran rumah tangga perkiraan.",
+    iosHintT:"Catatan untuk pengguna iPhone:",
+    iosHintB:"Jika tombol tidak merespons, buka berkas ini di Safari \u2014 ketuk ikon Bagikan lalu pilih \u201cBuka di Safari\u201d. Tampilan pratinjau (Quick Look) tidak menjalankan tombol.",
+    days:["Senin","Selasa","Rabu","Kamis","Jumat","Sabtu","Minggu"],
+    breakfast:"Sarapan", lunch:"Makan Siang", dinner:"Makan Malam", snack:"Selingan",
+    daySummary:(k,p,f,c)=>`Total hari ini \u2248 ${k} kkal \u00b7 Protein ${p} g \u00b7 Lemak ${f} g \u00b7 Karbohidrat ${c} g`,
+    adjTitle:"Penyesuaian yang diterapkan:",
+    errFill:"Mohon lengkapi tinggi, berat, umur, dan lingkar perut dengan angka yang valid.",
+    notesNone:"Tidak ada pembatasan khusus. Pola makan gizi seimbang diterapkan.",
+    avoidNote:(x)=>`Makanan yang tidak disukai dihindari: ${x}.`,
+    likeNote:(x)=>`Makanan yang disukai diutamakan: ${x}.`
+  },
+  en:{
+    appTitle:"BMI Calculator & Weekly Meal Planner",
+    appSub:"Based on WHO Asia-Pacific criteria and the Harris-Benedict equation. Works fully offline.",
+    ageBadge:"BMI calculation, menu planning, and physical-exercise recommendations for ages 17 and older (Adults and Seniors).",
+    s1Title:"Personal & Anthropometric Data", s1Sub:"Complete the fields below to calculate your BMI and nutritional needs.",
+    lName:"Name", lDob:"Date of Birth", lAge:"Age (years)", lPhone:"Phone / WhatsApp",
+    lHeight:"Height (cm)", lWeight:"Weight (kg)", lWaist:"Waist Circumference (cm)",
+    lSex:"Sex", lMale:"Male", lFemale:"Female", lActivity:"Activity Level",
+    actSed:"Sedentary (bed / minimal)", actLight:"Light (1-3x/week)", actMod:"Moderate (3-5x/week)",
+    actHeavy:"Heavy (6-7x/week)", actVery:"Very heavy (athlete)",
+    s2Title:"Preferences, Medications & Conditions", s2Sub:"This information is used to tailor your menu and nutrition calculations.",
+    lLike:"Foods You Like", lDislike:"Foods You Dislike", lMeds:"Current Medications",
+    lDisease:"Medical Conditions",
+    dDM:"Diabetes Mellitus", dHTN:"Hypertension (High BP)", dSH:"Hemorrhagic Stroke",
+    dSI:"Ischemic Stroke", dCAD:"Heart Attack", dKID:"Kidney Disease",
+    lOther1:"Other Condition 1", lOther2:"Other Condition 2", lOther3:"Other Condition 3",
+    btnCalc:"Calculate & Build Menu", btnReset:"Reset",
+    s3Title:"Assessment Results", s4Title:"Daily Nutritional Needs", s5Title:"7-Day Menu",
+    s6Title:"Drug Interactions & Safety Notes",
+    s6Sub:"Possible interactions between your medications and foods or other drugs.",
+    fiberLbl:"Fiber per day", fluidLbl:"Fluid per day", sodiumLbl:"Sodium (salt) per day",
+    fluidCheck:"(adjust per your doctor's advice)",
+    freeBadge:"(FREE)",
+    freeNotice:"This version can only create meal plans for maintaining body weight (preventing further weight gain), because <strong>SAFE</strong> reduction of body weight and visceral fat must be <strong>MONITORED</strong> and evaluated by a doctor or a trained coach. To obtain the <strong>FULL version</strong> that can create menus for reducing visceral fat and building muscle mass, please contact the person who invited you or who gave you this application to <strong>JOIN</strong> our Monitoring and Mentoring Program.",
+    drugRecog:"Active ingredients recognized from what you typed (brand names are automatically mapped to their active ingredient):",
+    sevInfo:"Info", sevCaution:"Caution", sevSerious:"Important",
+    ixNone:"No medication entered, or no interactions worth highlighting were detected. Still review your medications with a doctor or pharmacist.",
+    btnPDF:"\u2b07 Download PDF", btnJPEG:"\u2b07 Download JPEG",
+    btnRegen:"\u21bb Generate Another Food Variation",
+    exTitle:"Recommended Physical Exercise",
+    exSub:"Exercises are tailored to your calorie target, BMI, central obesity, conditions, medications, and goal. Calories are estimated as MET \u00d7 body weight (kg) \u00d7 duration (hours), based on the 2011 Compendium of Physical Activities.",
+    btnRegenEx:"\u21bb Suggest Another Exercise Variation",
+    ebBMR:"Basal Metabolic Rate (BMR)",
+    ebTDEE:"Total Daily Energy Expenditure (TDEE, BMR \u00d7 activity)",
+    ebIntake:"Intake from the food menu (target)",
+    ebExercise:"Extra burn from exercise (average/day)",
+    ebTotalOut:"Total expenditure (TDEE + exercise)",
+    ebNet:"Energy balance (intake \u2212 expenditure)",
+    ebExplLoss:"A negative value indicates a daily energy deficit that drives body-fat loss (especially visceral fat) while preserving/building muscle mass through resistance training.",
+    ebExplMaintain:"For weight maintenance, intake is balanced against expenditure; exercise is still recommended for cardiometabolic health and to preserve muscle mass.",
+    kcalDay:"kcal/day",
+    exAerobic:"Cardio / Aerobic Training",
+    exStrength:"Strength / Muscle Training",
+    exBalance:"Balance Training (falls prevention)",
+    exFlexibility:"Flexibility / Stretching Training",
+    exDaily:"daily",
+    exDaysWk:"days/week",
+    exType:"Exercise Type",
+    exDur:"Duration",
+    exKcal:"Calories",
+    exMin:"min",
+    exKcalMin:"kcal/min (measured)",
+    impLow:"low impact",
+    impMod:"moderate impact",
+    impHigh:"high impact",
+    exNoteCV:"Because of a history of heart disease/stroke, high-impact exercise and HIIT are avoided; cardiovascular screening and physician supervision are required before starting.",
+    exNoteHTN:"With hypertension, avoid breath-holding (Valsalva) during lifting; favor moderate intensity.",
+    exNoteRenal:"With kidney disease/hyperkalemia risk, avoid very-high-intensity exercise; choose light-to-moderate intensity.",
+    exNoteHypoG:"Because of insulin/sulfonylurea use, monitor blood glucose before and after exercise and keep a carbohydrate source on hand to prevent hypoglycemia.",
+    exNoteDM:"With diabetes, favor low-impact exercise and inspect the feet before/after sessions.",
+    exNoteElderly:"For older adults (\u226560 yr), the 4 pillars of senior movement apply: light aerobic (progressive walking), muscle strengthening to prevent sarcopenia (chair squats, wall push-ups, heel raises), balance training to prevent falls (Cochrane evidence), and daily stretching/flexibility. Start slow and progress gradually; use the \u201ctalk test\u201d \u2014 if you can still speak a full sentence, the intensity is right.",
+    exNoteGeneral:"Recommendations are general; individualize them with a physician or sports-medicine specialist.",
+    whoNote:"Note: BMI uses the WHO criteria for the Asia-Pacific region.",
+    refTitle:"Reference List",
+    refIntro:"All theory, calculation bases, interpretation, and menu design follow the books and articles below (verified DOIs, indexed in Scopus/PubMed):",
+    reportTitle:"Nutrition & Weekly Menu Report", reportDate:"Date",
+    pPatient:"Patient Data", pName:"Name", pAge:"Age", pSex:"Sex", pPhone:"Phone/WA",
+    pH:"Height", pW:"Weight", pWaist:"Waist", yr:"years",
+    rNeeds:"Daily Nutritional Needs", rAdjust:"Diet Adjustments", rIx:"Drug Interactions", rMenu:"7-Day Menu",
+    s5Sub:"The menu varies each day, prioritizing your preferred foods and avoiding disliked ones.",
+    elderlyMenuNote:"Senior adjustment (\u226560 yr): the menu emphasizes the brain-protective \u201cMIND diet\u201d pattern (leafy greens, fatty fish, tempeh/tofu, berries/antioxidant fruit, whole grains), softer easy-to-chew textures (to counter reduced appetite), and higher protein (1.2 g/kg) to prevent muscle loss (sarcopenia). Small, frequent meals (5\u20136x/day) are advised, using natural seasonings (garlic, ginger, turmeric, lime) to boost appetite. Limit fried foods, processed foods, and sweet snacks.",
+    placeLike:"e.g. chicken, fish, tofu, banana, spinach",
+    placeDislike:"e.g. organ meat, durian",
+    placeMeds:"e.g. metformin, amlodipine, warfarin",
+    central:"CENTRAL OBESITY", centralSub:"Waist circumference exceeds WHO Asia-Pacific threshold",
+    bmiLabels:{under:"Underweight",normal:"Normal",over:"At Risk / Overweight",ob1:"Obesity I",ob2:"Obesity II"},
+    mBMI:"BMI", mCat:"Category", mBBI:"Ideal Weight", mABW:"Adjusted Weight", mBMR:"BMR",
+    cal:"Calories", pro:"Protein", fat:"Fat", carb:"Carbohydrate", perDay:"/day",
+    needsSub:(g)=>`Daily targets are derived from the Harris-Benedict equation with an activity factor and disease adjustments. Weight goal: ${g}.`,
+    goalLose:"gradual weight loss", goalMaintain:"weight maintenance", goalGain:"weight gain",
+    goalRecomp:"visceral fat loss & muscle gain",
+    lGoal:"Menu Goal", goalMaintainOpt:"Weight Maintenance",
+    goalLossOpt:"Reduce Visceral Fat & Build Muscle",
+    gramNote:"Grams are the cooked/ready-to-eat amount already adjusted to your daily calorie target; URT is an approximate household measure.",
+    iosHintT:"Note for iPhone users:",
+    iosHintB:"If the buttons do not respond, open this file in Safari \u2014 tap the Share icon then choose \u201cOpen in Safari\u201d. The preview (Quick Look) does not run the buttons.",
+    days:["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+    breakfast:"Breakfast", lunch:"Lunch", dinner:"Dinner", snack:"Snack",
+    daySummary:(k,p,f,c)=>`Today's total \u2248 ${k} kcal \u00b7 Protein ${p} g \u00b7 Fat ${f} g \u00b7 Carbs ${c} g`,
+    adjTitle:"Adjustments applied:",
+    errFill:"Please complete height, weight, age, and waist with valid numbers.",
+    notesNone:"No special restriction. A balanced diet pattern is applied.",
+    avoidNote:(x)=>`Disliked foods avoided: ${x}.`,
+    likeNote:(x)=>`Preferred foods prioritized: ${x}.`
+  }
+};
+let LANG = 'id';
+let lastResult = null;
+let variationSeed = 0;
+
+function t(){ return I18N[LANG]; }
+
+function setLang(l){
+  LANG = l;
+  document.documentElement.lang = l;
+  document.getElementById('btnID').classList.toggle('active', l==='id');
+  document.getElementById('btnEN').classList.toggle('active', l==='en');
+  const m = t();
+  const map = ['appTitle','appSub','ageBadge','s1Title','s1Sub','lName','lDob','lAge','lPhone','lHeight','lWeight','lWaist',
+    'lSex','lMale','lFemale','lActivity','s2Title','s2Sub','lLike','lDislike','lMeds','lDisease',
+    'dDM','dHTN','dSH','dSI','dCAD','dKID','lOther1','lOther2','lOther3','btnCalc','btnReset',
+    's3Title','s4Title','s5Title','s5Sub','s6Title','s6Sub','btnPDF','btnJPEG',
+    'lGoal','goalMaintainOpt','goalLossOpt','iosHintT','iosHintB','btnRegen','whoNote','refTitle','refIntro',
+    'exTitle','exSub','btnRegenEx','freeBadge'];
+  const reqLabels = {lName:1,lDob:1,lAge:1,lPhone:1,lHeight:1,lWeight:1,lWaist:1,lSex:1,lGoal:1};
+  const reqText = (l==='id') ? 'wajib diisi/dipilih' : 'required';
+  map.forEach(id=>{ const el=document.getElementById(id); if(el && m[id]!==undefined){
+    if(reqLabels[id]){ el.innerHTML = m[id]+'<span class="req" data-req>'+reqText+'</span>'; }
+    else { el.textContent=m[id]; }
+  }});
+  // free-version notice (uses innerHTML because it contains emphasis markup)
+  var fn = document.getElementById('freeNotice');
+  if(fn) fn.innerHTML = m.freeNotice;
+  // activity options
+  document.getElementById('actSed').textContent=m.actSed;
+  document.getElementById('actLight').textContent=m.actLight;
+  document.getElementById('actMod').textContent=m.actMod;
+  document.getElementById('actHeavy').textContent=m.actHeavy;
+  document.getElementById('actVery').textContent=m.actVery;
+  // placeholders
+  document.getElementById('liked').placeholder=m.placeLike;
+  document.getElementById('disliked').placeholder=m.placeDislike;
+  document.getElementById('meds').placeholder=m.placeMeds;
+  // disclaimer
+  document.getElementById('discText').textContent = (l==='id')
+    ? "Penyusun menu ini hanya untuk membantu mempermudah pemilihan menu bagi awam dan bukan pengganti penilaian serta saran profesional."
+    : "This menu planner is only an aid to make food selection easier for the layperson and is not a substitute for professional judgment and advice.";
+  document.getElementById('discWarn').textContent = (l==='id')
+    ? "PERHATIAN: pada penderita penyakit tertentu serta meminum obat-obat rutin tertentu tetap wajib konsultasi ke dokter keluarga dan atau dokter spesialis Gizi Klinik."
+    : "ATTENTION: patients with certain conditions and those taking certain routine medications must still consult a family physician and/or a Clinical Nutrition specialist.";
+  if(lastResult) renderAll(lastResult);
+}
+
+function autoAge(){
+  const dob = document.getElementById('dob').value;
+  if(!dob) return;
+  const d = new Date(dob), now = new Date();
+  let a = now.getFullYear()-d.getFullYear();
+  const mm = now.getMonth()-d.getMonth();
+  if(mm<0 || (mm===0 && now.getDate()<d.getDate())) a--;
+  if(a>0 && a<120) document.getElementById('age').value = a;
+}
+
+const diseases = {dm:false,htn:false,stroke_h:false,stroke_i:false,cad:false,kidney:false};
+function toggleDisease(el){
+  const k = el.dataset.key;
+  diseases[k] = !diseases[k];
+  el.classList.toggle('on', diseases[k]);
+}
+
+/* ============================================================
+   FOOD DATABASE (Indonesian foods, with tags for filtering)
+   tags: lowSalt-ok, lowSugar-ok, lowFat-ok, lowPurine-ok, softTexture, vitK(for warfarin caution)
+   Each item: {id, name_id, name_en, kcal, p, f, c (grams), tags:[], type}
+============================================================ */
+const FOODS = {
+  carb:[
+    {n_id:"Nasi Putih",n_en:"White rice",kcal:171,p:2.5,f:0.1,c:40.0,g:100,u_id:"3/4 gls nasi",u_en:"3/4 cup rice",tags:["highGI"]},
+    {n_id:"Nasi Merah",n_en:"Brown rice",kcal:174,p:2.8,f:0.3,c:40.0,g:100,u_id:"3/4 gls nasi",u_en:"3/4 cup rice",tags:["lowGI", "fiber"]},
+    {n_id:"Beras Hitam",n_en:"Black rice",kcal:170,p:3.5,f:0.5,c:38.0,g:100,u_id:"3/4 gls nasi",u_en:"3/4 cup rice",tags:["lowGI", "fiber"]},
+    {n_id:"Ubi Jalar Oranye",n_en:"Orange sweet potato",kcal:129,p:1.5,f:0.3,c:30.0,g:135,u_id:"1/2 bh bsr",u_en:"1/2 large pc",tags:["lowGI", "fiber", "soft", "highK"]},
+    {n_id:"Ubi Jalar Ungu",n_en:"Purple sweet potato",kcal:129,p:1.5,f:0.3,c:30.0,g:135,u_id:"1/2 bh bsr",u_en:"1/2 large pc",tags:["lowGI", "fiber", "soft", "highK"]},
+    {n_id:"Singkong",n_en:"Cassava",kcal:147,p:1.0,f:0.3,c:35.0,g:120,u_id:"2 ptg sdg",u_en:"2 med pc",tags:["lowGI", "fiber"]},
+    {n_id:"Talas Besar",n_en:"Taro",kcal:150,p:2.0,f:0.2,c:35.0,g:125,u_id:"1/2 bh sdg",u_en:"1/2 med pc",tags:["lowGI", "fiber", "soft"]},
+    {n_id:"Kentang Putih",n_en:"Boiled potato",kcal:163,p:2.5,f:0.1,c:38.0,g:200,u_id:"2 bh sdg",u_en:"2 med pc",tags:["soft", "highK"]},
+    {n_id:"Jagung Manis",n_en:"Sweet corn",kcal:148,p:3.5,f:1.5,c:30.0,g:125,u_id:"1 tongkol sdg",u_en:"1 med cob",tags:["lowGI", "fiber"]},
+    {n_id:"Roti Gandum Utuh",n_en:"Whole-wheat bread",kcal:182,p:4.0,f:2.0,c:37.0,g:70,u_id:"2 iris sdg",u_en:"2 slice med",tags:["lowGI", "fiber"]},
+    {n_id:"Bihun Beras",n_en:"Rice vermicelli",kcal:168,p:1.5,f:0.2,c:40.0,g:50,u_id:"1/2 gls (kering)",u_en:"1/2 cup (dry)",tags:["highGI"]},
+    {n_id:"Makaroni / Pasta",n_en:"Pasta",kcal:172,p:4.0,f:0.5,c:38.0,g:50,u_id:"1/2 gls (kering)",u_en:"1/2 cup (dry)",tags:["highGI"]},
+    {n_id:"Sukun",n_en:"Breadfruit",kcal:118,p:1.5,f:0.5,c:27.0,g:50,u_id:"3 bj sdg",u_en:"3 med pc",tags:["lowGI", "fiber"]},
+    {n_id:"Sagu",n_en:"Sago (papeda)",kcal:183,p:0.3,f:0.2,c:45.0,g:50,u_id:"4 sdm",u_en:"4 tbsp",tags:["highGI", "soft"]}
+  ],
+  protein:[
+    {n_id:"Ayam Negeri, daging tanpa kulit",n_en:"Skinless chicken breast",kcal:46,p:7.0,f:2.0,c:0.0,g:40,u_id:"1 ptg sdg",u_en:"1 med pc",tags:["leanMeat", "heartHealthy"]},
+    {n_id:"Ayam Kampung, daging tanpa kulit",n_en:"Skinless free-range chicken",kcal:55,p:7.0,f:3.0,c:0.0,g:40,u_id:"1 ptg sdg",u_en:"1 med pc",tags:["leanMeat", "heartHealthy"]},
+    {n_id:"Telur Ayam Negeri",n_en:"Whole chicken egg",kcal:73,p:7.0,f:5.0,c:0.0,g:55,u_id:"1 btr",u_en:"1 egg(s)",tags:["leanMeat", "heartHealthy", "soft", "iron"]},
+    {n_id:"Ikan Kembung",n_en:"Indian mackerel",kcal:46,p:7.0,f:2.0,c:0.0,g:30,u_id:"1/3 ekor sdg",u_en:"1/3 med fish",tags:["omega3", "heartHealthy"]},
+    {n_id:"Ikan Tenggiri",n_en:"Spanish mackerel",kcal:42,p:7.0,f:1.5,c:0.0,g:35,u_id:"1/3 ekor sdg",u_en:"1/3 med fish",tags:["omega3", "heartHealthy"]},
+    {n_id:"Ikan Tuna Sirip Kuning",n_en:"Yellowfin tuna",kcal:32,p:7.0,f:0.5,c:0.0,g:35,u_id:"1/3 ekor sdg",u_en:"1/3 med fish",tags:["omega3", "heartHealthy"]},
+    {n_id:"Ikan Cakalang",n_en:"Skipjack tuna",kcal:37,p:7.0,f:1.0,c:0.0,g:35,u_id:"1/3 ekor sdg",u_en:"1/3 med fish",tags:["omega3", "heartHealthy"]},
+    {n_id:"Ikan Patin",n_en:"Pangasius catfish",kcal:60,p:7.0,f:3.5,c:0.0,g:35,u_id:"1/3 ekor sdg",u_en:"1/3 med fish",tags:["heartHealthy"]},
+    {n_id:"Ikan Lele Dumbo",n_en:"Catfish",kcal:50,p:7.0,f:2.5,c:0.0,g:35,u_id:"1/3 ekor sdg",u_en:"1/3 med fish",tags:["heartHealthy"]},
+    {n_id:"Ikan Nila",n_en:"Tilapia",kcal:55,p:7.0,f:3.0,c:0.0,g:35,u_id:"1/3 ekor sdg",u_en:"1/3 med fish",tags:["heartHealthy", "soft"]},
+    {n_id:"Ikan Gurami",n_en:"Gourami",kcal:60,p:7.0,f:3.5,c:0.0,g:35,u_id:"1/3 ekor sdg",u_en:"1/3 med fish",tags:["heartHealthy"]},
+    {n_id:"Ikan Gabus",n_en:"Snakehead fish",kcal:44,p:7.5,f:1.5,c:0.0,g:35,u_id:"1/3 ekor sdg",u_en:"1/3 med fish",tags:["heartHealthy", "soft"]},
+    {n_id:"Ikan Bandeng",n_en:"Milkfish",kcal:64,p:7.0,f:4.0,c:0.0,g:35,u_id:"1/3 ekor sdg",u_en:"1/3 med fish",tags:["omega3", "heartHealthy", "soft"]},
+    {n_id:"Ikan Mas",n_en:"Carp",kcal:55,p:7.0,f:3.0,c:0.0,g:35,u_id:"1/3 ekor sdg",u_en:"1/3 med fish",tags:["heartHealthy"]},
+    {n_id:"Ikan Dencis / Sardin",n_en:"Sardine",kcal:50,p:7.0,f:2.5,c:0.0,g:30,u_id:"1/3 ekor sdg",u_en:"1/3 med fish",tags:["highPurine", "omega3", "heartHealthy"]},
+    {n_id:"Udang Windu",n_en:"Tiger prawn",kcal:37,p:7.0,f:1.0,c:0.0,g:35,u_id:"2 sdm",u_en:"2 tbsp",tags:["highPurine"]},
+    {n_id:"Kepiting Bakau",n_en:"Mud crab",kcal:42,p:7.0,f:1.5,c:0.0,g:45,u_id:"1/2 ekor sdg",u_en:"1/2 med fish",tags:["highPurine"]},
+    {n_id:"Kerang Hijau",n_en:"Green mussels",kcal:43,p:7.0,f:1.0,c:1.5,g:40,u_id:"5 bh sdg",u_en:"5 med pc",tags:["highPurine"]},
+    {n_id:"Cumi-cumi",n_en:"Squid",kcal:39,p:7.0,f:1.0,c:0.5,g:45,u_id:"1/2 ekor sdg",u_en:"1/2 med fish",tags:["highPurine"]},
+    {n_id:"Salmon Fillet",n_en:"Salmon fillet",kcal:68,p:7.0,f:4.5,c:0.0,g:35,u_id:"1 ptg sdg",u_en:"1 med pc",tags:["omega3", "heartHealthy"]},
+    {n_id:"Tempe Kedelai",n_en:"Tempeh",kcal:77,p:5.0,f:3.0,c:7.5,g:50,u_id:"2 ptg sdg",u_en:"2 med pc",tags:["plant", "heartHealthy", "iron"]},
+    {n_id:"Tahu Putih",n_en:"Tofu",kcal:53,p:5.0,f:3.0,c:1.5,g:110,u_id:"1 ptg bsr",u_en:"1 large pc",tags:["plant", "heartHealthy", "soft"]},
+    {n_id:"Tahu Sutra",n_en:"Silken tofu",kcal:50,p:5.0,f:2.5,c:2.0,g:120,u_id:"1 bh sdg",u_en:"1 med pc",tags:["plant", "heartHealthy", "soft"]},
+    {n_id:"Kacang Hijau",n_en:"Mung beans",kcal:77,p:5.0,f:3.0,c:7.5,g:25,u_id:"2½ sdm",u_en:"2½ tbsp",tags:["heartHealthy", "plant", "iron"]},
+    {n_id:"Kacang Merah",n_en:"Red kidney beans",kcal:77,p:5.0,f:3.0,c:7.5,g:25,u_id:"2 sdm",u_en:"2 tbsp",tags:["heartHealthy", "plant", "iron"]},
+    {n_id:"Edamame",n_en:"Edamame",kcal:69,p:5.5,f:3.0,c:5.0,g:75,u_id:"1/2 gls",u_en:"1/2 cup",tags:["heartHealthy", "plant"]},
+    {n_id:"Daging Sapi Has Dalam",n_en:"Beef tenderloin",kcal:46,p:7.0,f:2.0,c:0.0,g:35,u_id:"1 ptg sdg",u_en:"1 med pc",tags:["leanMeat", "heartHealthy", "iron"]},
+    {n_id:"Daging Kambing",n_en:"Goat meat",kcal:46,p:7.0,f:2.0,c:0.0,g:40,u_id:"1 ptg sdg",u_en:"1 med pc",tags:[]},
+    {n_id:"Hati Ayam",n_en:"Chicken liver",kcal:50,p:7.0,f:2.0,c:1.0,g:40,u_id:"1 ptg sdg",u_en:"1 med pc",tags:["highPurine","iron"]},
+    {n_id:"Ikan Teri Kering",n_en:"Dried anchovies",kcal:32,p:7.0,f:0.5,c:0.0,g:15,u_id:"2 sdm",u_en:"2 tbsp",tags:["highPurine", "heartHealthy"]},
+    {n_id:"Susu Skim",n_en:"Skim milk",kcal:70,p:7.0,f:0.2,c:10.0,g:200,u_id:"1 gls (200 mL)",u_en:"1 cup (200 mL)",tags:["dairy", "lowFat", "soft"]},
+    {n_id:"Yogurt Plain",n_en:"Plain yogurt",kcal:104,p:7.0,f:4.5,c:9.0,g:135,u_id:"2/3 gls (135 mL)",u_en:"2/3 cup (135 mL)",tags:["dairy", "soft"]},
+    {n_id:"Susu Kedelai",n_en:"Soy milk",kcal:100,p:7.0,f:4.0,c:9.0,g:200,u_id:"1 gls (200mL)",u_en:"1 cup (200mL)",tags:["plant", "heartHealthy", "dairy", "soft"]},
+    {n_id:"Putih telur",n_en:"Egg white",kcal:35,p:7,f:0,c:0,g:60,u_id:"2 butir",u_en:"2 egg whites",tags:["soft", "lowFat", "heartHealthy", "leanMeat"]}
+  ],
+  veg:[
+    {n_id:"Bayam Merah",n_en:"Red spinach",kcal:38,p:2.5,f:0.4,c:6.0,g:100,u_id:"1 gls",u_en:"1 cup",tags:["vitK", "highK", "fiber", "iron", "soft"]},
+    {n_id:"Bayam Hijau",n_en:"Green spinach",kcal:36,p:2.5,f:0.4,c:5.5,g:100,u_id:"1 gls",u_en:"1 cup",tags:["vitK", "highK", "fiber", "iron", "soft"]},
+    {n_id:"Kangkung",n_en:"Water spinach",kcal:31,p:2.0,f:0.3,c:5.0,g:100,u_id:"1 gls",u_en:"1 cup",tags:["vitK", "fiber", "iron"]},
+    {n_id:"Sawi Hijau",n_en:"Mustard greens",kcal:29,p:2.0,f:0.3,c:4.5,g:100,u_id:"1 gls",u_en:"1 cup",tags:["vitK", "fiber", "vitC"]},
+    {n_id:"Daun Singkong",n_en:"Cassava leaves",kcal:50,p:4.0,f:0.5,c:7.5,g:100,u_id:"1 gls",u_en:"1 cup",tags:["vitK", "fiber", "iron", "vitA"]},
+    {n_id:"Daun Katuk",n_en:"Katuk leaves",kcal:60,p:4.8,f:1.0,c:8.0,g:100,u_id:"1 gls",u_en:"1 cup",tags:["vitK", "fiber", "iron", "vitA", "vitC"]},
+    {n_id:"Daun Kelor",n_en:"Moringa leaves",kcal:75,p:6.7,f:1.7,c:8.3,g:100,u_id:"1 gls",u_en:"1 cup",tags:["vitK", "fiber", "iron", "vitA"]},
+    {n_id:"Wortel",n_en:"Carrot",kcal:26,p:0.5,f:0.2,c:5.5,g:50,u_id:"1 bh sdg",u_en:"1 med pc",tags:["fiber", "vitA", "soft"]},
+    {n_id:"Labu Kuning / Waluh",n_en:"Pumpkin",kcal:29,p:1.0,f:0.1,c:6.0,g:100,u_id:"1 ptg bsr",u_en:"1 large pc",tags:["highK", "fiber", "vitA", "soft"]},
+    {n_id:"Brokoli",n_en:"Broccoli",kcal:37,p:2.5,f:0.3,c:6.0,g:100,u_id:"1 gls",u_en:"1 cup",tags:["vitK", "fiber", "vitC"]},
+    {n_id:"Kembang Kol",n_en:"Cauliflower",kcal:32,p:2.0,f:0.2,c:5.5,g:100,u_id:"1 gls",u_en:"1 cup",tags:["vitK", "fiber", "vitC", "soft"]},
+    {n_id:"Kubis Hijau",n_en:"Cabbage",kcal:30,p:1.5,f:0.2,c:5.5,g:100,u_id:"1 gls",u_en:"1 cup",tags:["vitK", "highK", "fiber", "vitC"]},
+    {n_id:"Terong Ungu",n_en:"Eggplant",kcal:24,p:1.0,f:0.2,c:4.5,g:100,u_id:"1 bh sdg",u_en:"1 med pc",tags:["highK", "fiber", "soft"]},
+    {n_id:"Tomat Merah",n_en:"Tomato",kcal:24,p:1.0,f:0.2,c:4.5,g:100,u_id:"1 bh sdg",u_en:"1 med pc",tags:["fiber", "vitC"]},
+    {n_id:"Labu Siam",n_en:"Chayote",kcal:20,p:0.8,f:0.1,c:4.0,g:80,u_id:"1 bh sdg",u_en:"1 med pc",tags:["fiber", "vitA", "soft"]},
+    {n_id:"Kacang Panjang",n_en:"Long beans",kcal:41,p:2.5,f:0.3,c:7.0,g:100,u_id:"1 gls",u_en:"1 cup",tags:["fiber"]},
+    {n_id:"Buncis",n_en:"Green beans",kcal:38,p:2.0,f:0.2,c:7.0,g:100,u_id:"1 gls",u_en:"1 cup",tags:["fiber"]}
+  ],
+  fruit:[
+    {n_id:"Pisang Ambon",n_en:"Banana",kcal:51,p:0.5,f:0.1,c:12.0,g:50,u_id:"1 bh kecil",u_en:"1 small pc",tags:["medGI", "highK", "highKstrong", "potassium", "soft", "fiber"]},
+    {n_id:"Pisang Kepok",n_en:"Plantain",kcal:48,p:0.5,f:0.2,c:11.0,g:40,u_id:"1 bh sdg",u_en:"1 med pc",tags:["medGI", "highK", "potassium", "soft", "fiber"]},
+    {n_id:"Pepaya Matang",n_en:"Papaya",kcal:43,p:0.6,f:0.1,c:10.0,g:100,u_id:"1 ptg bsr",u_en:"1 large pc",tags:["medGI", "fiber", "vitC", "soft"]},
+    {n_id:"Mangga Arumanis",n_en:"Mango",kcal:52,p:0.7,f:0.3,c:11.5,g:90,u_id:"3/4 bh sdg",u_en:"3/4 med pc",tags:["medGI", "fiber"]},
+    {n_id:"Nanas",n_en:"Pineapple",kcal:46,p:0.4,f:0.1,c:11.0,g:85,u_id:"1 ptg sdg",u_en:"1 med pc",tags:["medGI", "fiber", "vitC"]},
+    {n_id:"Jambu Biji Merah",n_en:"Red guava",kcal:53,p:0.9,f:0.2,c:12.0,g:100,u_id:"1 bh sdg",u_en:"1 med pc",tags:["lowGI", "fiber", "vitC"]},
+    {n_id:"Jeruk Manis / Siam",n_en:"Orange",kcal:61,p:0.9,f:0.2,c:14.0,g:110,u_id:"1 bh sdg",u_en:"1 med pc",tags:["lowGI", "highK", "fiber", "vitC"]},
+    {n_id:"Semangka",n_en:"Watermelon",kcal:62,p:1.0,f:0.2,c:14.0,g:180,u_id:"2 ptg sdg",u_en:"2 med pc",tags:["highGI", "highK", "fiber", "soft"]},
+    {n_id:"Melon Kuning",n_en:"Melon",kcal:64,p:0.8,f:0.1,c:15.0,g:190,u_id:"1 ptg bsr",u_en:"1 large pc",tags:["medGI", "highK", "fiber", "soft"]},
+    {n_id:"Jeruk Bali / Pomelo",n_en:"Pomelo",kcal:45,p:0.7,f:0.2,c:10.0,g:100,u_id:"1 ptg sdg",u_en:"1 med pc",tags:["lowGI", "highK", "fiber", "vitC"]},
+    {n_id:"Belimbing Manis",n_en:"Starfruit",kcal:46,p:1.0,f:0.2,c:10.0,g:140,u_id:"1 bh sdg",u_en:"1 med pc",tags:["lowGI", "fiber", "vitC"]},
+    {n_id:"Manggis",n_en:"Mangosteen",kcal:45,p:0.7,f:0.2,c:10.0,g:80,u_id:"2 bh sdg",u_en:"2 med pc",tags:["lowGI", "fiber", "soft"]}
+  ],
+  fat:[
+    {n_id:"Minyak zaitun",n_en:"Olive oil",kcal:45,p:0,f:5,c:0,g:5,u_id:"1 sdt",u_en:"1 tsp",tags:["unsat", "heartHealthy"]},
+    {n_id:"Alpukat Mentega",n_en:"Avocado",kcal:90,p:1.0,f:8.0,c:3.5,g:60,u_id:"1/2 bh sdg",u_en:"1/2 med pc",tags:["highK", "unsat", "heartHealthy", "soft"]},
+    {n_id:"Kacang Almond",n_en:"Almonds",kcal:89,p:3.0,f:7.0,c:3.5,g:14,u_id:"7 bj",u_en:"7 pc",tags:["unsat", "heartHealthy"]},
+    {n_id:"Santan encer",n_en:"Light coconut milk",kcal:45,p:0,f:5,c:0,g:40,u_id:"1/3 gls",u_en:"1/3 cup",tags:["sat"]}
+  ]
+};
+
+/* ============================================================
+   CALCULATION ENGINE
+============================================================ */
+function num(id){ return parseFloat(document.getElementById(id).value); }
+
+function calculate(){
+  try{
+    _calculate();
+  }catch(e){
+    const err = document.getElementById('errMsg');
+    if(err){ err.textContent = (LANG==='id'?'Terjadi kesalahan: ':'An error occurred: ')+(e&&e.message?e.message:e); err.classList.remove('hidden'); }
+  }
+}
+function _calculate(){
+  variationSeed = 0;
+  const err = document.getElementById('errMsg');
+  const h=num('height'), w=num('weight'), age=num('age'), waist=num('waist');
+  const sex = document.querySelector('input[name=sex]:checked').value;
+  const act = parseFloat(document.getElementById('activity').value);
+  if(!(h>0)||!(w>0)||!(age>0)||!(waist>0)){
+    err.textContent = t().errFill; err.classList.remove('hidden'); return;
+  }
+  err.classList.add('hidden');
+
+  // BMI
+  const bmi = w/Math.pow(h/100,2);
+  // WHO Asia-Pacific category
+  let catKey;
+  if(bmi<18.5) catKey='under';
+  else if(bmi<23) catKey='normal';
+  else if(bmi<25) catKey='over';
+  else if(bmi<30) catKey='ob1';
+  else catKey='ob2';
+
+  // Ideal body weight (Broca modified)
+  const bbi = (h-100)*(sex==='M'?0.90:0.85);
+  // Adjusted body weight if obese (BMI>=25 Asia-Pacific obese)
+  let calcWeight = w, abw=null;
+  if(bmi>=25){ abw = bbi + 0.25*(w-bbi); calcWeight = abw; }
+  else if(bmi<18.5){ calcWeight = w; } // use actual for underweight
+
+  // Central obesity (WHO Asia-Pacific cutoff)
+  const centralCut = sex==='M'?90:80;
+  const central = waist > centralCut;
+
+  // BMR — Revised Harris-Benedict equation (Pavlidou et al. 2023, Metabolites 13(2):189;
+  // DOI 10.3390/metabo13020189), validated for normal, overweight, and obese adults.
+  // Males:   (9.65 x kg) + (573 x m) - (5.08 x age) + 260
+  // Females: (7.38 x kg) + (607 x m) - (2.31 x age) + 43
+  const hM = h/100;
+  let bmr;
+  if(sex==='M') bmr = 9.65*calcWeight + 573*hM - 5.08*age + 260;
+  else bmr = 7.38*calcWeight + 607*hM - 2.31*age + 43;
+
+  // TDEE
+  let tdee = bmr * act;
+
+  // ---- Goal mode (user choice): maintenance vs fat-loss/muscle-gain ----
+  const goalMode = (document.querySelector('input[name=goal]:checked')||{value:'maintain'}).value;
+  let goalKey='goalMaintain', energy=tdee;
+  let recomp=false, underweightLossBlocked=false;
+  if(goalMode==='loss'){
+    if(bmi<18.5){
+      // Unsafe to cut on an underweight person: treat as maintenance, flag note
+      energy = tdee; goalKey='goalMaintain'; underweightLossBlocked=true;
+    } else {
+      const deficit = (bmi>=30) ? 600 : 500;
+      energy = tdee - deficit; goalKey='goalRecomp'; recomp=true;
+    }
+  } else {
+    // maintenance
+    energy = tdee; goalKey='goalMaintain';
+    // still gently correct extremes for safety
+    if(bmi<18.5){ energy = tdee + 300; goalKey='goalGain'; }
+  }
+  energy = Math.max(energy, 1200); // safety floor
+  energy = Math.round(energy/10)*10;
+
+  // ---- Macro distribution with disease logic ----
+  const adj = []; // adjustment notes (keys)
+  // Carbohydrate ceiling (fraction of energy). Accepted distribution range is
+  // 45-65% carbohydrate / 20-35% fat / 10-20% protein; disease logic tightens the
+  // ceiling below. Protein is set separately in g per kg of ideal body weight.
+  let carbPct=0.65, proPerKg=1.0, fatPct=0.275;
+
+  // Diabetes -> lower carb, higher fiber, distribute
+  // Diabetes: emphasis is on carbohydrate QUALITY (low glycemic index, high fiber) and
+  // consistency rather than one fixed ratio (Evert AB et al. Diabetes Care 2019,
+  // DOI 10.2337/dci19-0014). Carbohydrate is kept to the lower half of the accepted
+  // range and protein raised modestly for satiety and glycemic control.
+  if(diseases.dm){ carbPct=0.55; fatPct=0.30; proPerKg=Math.max(proPerKg,1.2); adj.push('dm'); }
+  // Hypertension -> low sodium emphasis (note), keep DASH-like
+  if(diseases.htn){ adj.push('htn'); }
+  // Heart attack / ischemic stroke -> heart-healthy fats, lower sat fat
+  if(diseases.cad || diseases.stroke_i){ fatPct=0.25; adj.push('heart'); }
+  // Hemorrhagic stroke -> generally soft texture / swallowing caution note
+  if(diseases.stroke_h){ adj.push('strokeH'); }
+  // Protein target (baseline; disease rules below may raise or lower it)
+  proPerKg = 1.0;
+  if(diseases.dm) proPerKg = 1.2;   // re-apply: satiety & glycemic control
+  if(bmi>=25) proPerKg = 1.2; // preserve lean mass during deficit
+  if(age>=65) proPerKg = Math.max(proPerKg,1.2);
+  // ---- ELDERLY (>=60): sarcopenia prevention needs higher protein ----
+  // Ref: Cruz-Jentoft AJ et al. (EWGSOP2) Age Ageing 2019;48(1):16-31 (DOI 10.1093/ageing/afy169);
+  // "Panduan Metode Gerak Lansia" (target 1.2 g/kg/hari). Kidney restriction still overrides below.
+  const isElderly = (age>=60);
+  if(isElderly) proPerKg = Math.max(proPerKg,1.2);
+  if(isElderly) adj.push('elderly');
+  // Fat-loss + muscle-gain program: higher protein to build/preserve muscle, lower refined carb
+  if(recomp){
+    proPerKg = Math.max(proPerKg, 1.6);
+    carbPct = Math.min(carbPct, 0.45); // emphasize lower refined carb to target visceral fat
+    fatPct = 0.30;
+    adj.push('recomp');
+  }
+
+  // Kidney note not in toggles; custom diseases parsed for keywords
+  const others = [document.getElementById('other1').value, document.getElementById('other2').value, document.getElementById('other3').value]
+    .map(s=>s.trim()).filter(Boolean);
+  const othersLow = others.map(s=>s.toLowerCase());
+  let kidney=diseases.kidney, gout=false, liver=false;
+  let dyslip=false, gastritis=false, osteoporosis=false, anemia=false, cancer=false, copd=false, thyroid=false;
+  othersLow.forEach(s=>{
+    if(/ginjal|kidney|ckd|gagal ginjal|renal/.test(s)) kidney=true;
+    if(/asam urat|gout|urat/.test(s)) gout=true;
+    if(/hati|liver|sirosis|hepat/.test(s)) liver=true;
+    if(/kolesterol|dislipidemia|dyslipid|trigliserida|hiperlipid/.test(s)) dyslip=true;
+    if(/maag|gastritis|lambung|gerd|dispepsia|tukak|ulkus/.test(s)) gastritis=true;
+    if(/osteoporosis|tulang keropos|osteopeni/.test(s)) osteoporosis=true;
+    if(/anemia|kurang darah|hb rendah|defisiensi besi/.test(s)) anemia=true;
+    if(/kanker|cancer|tumor ganas|kemoterapi|karsinoma/.test(s)) cancer=true;
+    if(/ppok|copd|paru obstruktif|emfisema|asma berat/.test(s)) copd=true;
+    if(/tiroid|thyroid|hipotiroid|hipertiroid|gondok/.test(s)) thyroid=true;
+  });
+  if(kidney){ proPerKg=0.8; adj.push('kidney'); }
+  if(gout){ adj.push('gout'); }
+  if(liver){ proPerKg=Math.max(proPerKg,1.2); adj.push('liver'); }
+  // Dyslipidemia: lower total & saturated fat (Panduan Klinis Gizi; MIND-diet limits)
+  if(dyslip){ fatPct=Math.min(fatPct,0.25); adj.push('dyslip'); }
+  // Gastritis/GERD: softer, non-irritating textures (handled in scoring)
+  if(gastritis){ adj.push('gastritis'); }
+  // Osteoporosis: emphasize calcium & vitamin D sources
+  if(osteoporosis){ adj.push('osteoporosis'); }
+  // Anemia: emphasize iron + vitamin C pairing for absorption
+  if(anemia){ adj.push('anemia'); }
+  // Cancer / recovery: higher protein need (ESPEN oncology 1.2-1.5 g/kg) unless kidney restricts
+  if(cancer && !kidney){ proPerKg=Math.max(proPerKg,1.3); adj.push('cancer'); }
+  // COPD: adequate protein, avoid very high carbohydrate load
+  if(copd){ carbPct=Math.min(carbPct,0.50); proPerKg=Math.max(proPerKg,1.2); adj.push('copd'); }
+  if(thyroid){ adj.push('thyroid'); }
+
+  // Medications parsing — comprehensive detection
+  const medsTxt = document.getElementById('meds').value.toLowerCase();
+  // Data-driven detection: brand names are mapped to their active ingredient.
+  const D = {};
+  const recognizedDrugs = [];
+  DRUG_DEFS.forEach(function(def){
+    const hit = def.rx.test(medsTxt);
+    D[def.k] = hit;
+    if(hit) recognizedDrugs.push(def);
+  });
+  // Legacy flags used elsewhere
+  let warfarin=D.warfarin, steroid=D.corticosteroid, metformin=D.metformin;
+  let diuretic=(D.loop||D.thiazide);
+  if(warfarin) adj.push('warfarin');
+  if(steroid) adj.push('steroid');
+  if(metformin) adj.push('metformin');
+  if(diuretic) adj.push('diuretic');
+  // Hyperkalemia risk (limit very high-K foods)
+  const hyperKrisk = D.spirono || D.ksupp || ((D.acei||D.arb) && kidney);
+  if(hyperKrisk) adj.push('hyperK');
+  if(D.levothyroxine) adj.push('levo');
+  if(D.ppi||D.antacid) adj.push('ppi');
+  if(D.bisphosphonate) adj.push('bisphos');
+  if(D.isoniazid) adj.push('inh');
+  if(D.sulfonylurea||D.insulin) adj.push('hypoG');
+
+  // Compute macros.
+  // Protein is fixed clinically (g per kg of ideal body weight). Fat starts from the
+  // disease-driven percentage, and carbohydrate takes the remaining energy.
+  const proteinG = Math.round(proPerKg * bbi);
+  const proteinKcal = proteinG*4;
+  let fatKcal = energy*fatPct;
+  let carbKcal = energy - proteinKcal - fatKcal;
+  // Enforce the disease carbohydrate ceiling (diabetes 45%, fat-loss 45%, COPD 50%).
+  // Surplus energy is shifted from carbohydrate to fat, but fat is never pushed above
+  // 35% of energy (upper limit of the accepted macronutrient distribution range).
+  const carbCapKcal = energy*carbPct;
+  if(carbKcal > carbCapKcal){
+    const surplus = carbKcal - carbCapKcal;
+    const fatCeilKcal = energy*0.35;
+    const room = Math.max(0, fatCeilKcal - fatKcal);
+    const move = Math.min(surplus, room);
+    fatKcal += move;
+    carbKcal -= move;
+  }
+  if(carbKcal < 0) carbKcal = 0;
+  const fatG = Math.round(fatKcal/9);
+  const carbG = Math.round(carbKcal/4);
+  // Actual achieved percentages (shown to the user so the numbers can be verified)
+  const proPct = Math.round(proteinG*4/energy*100);
+  const fatPctActual = Math.round(fatG*9/energy*100);
+  const carbPctActual = Math.round(carbG*4/energy*100);
+
+  // ---- Fiber, fluid, and sodium targets ----
+  // Fiber 25-38 g/day (Panduan Klinis Gizi); use 14 g per 1000 kcal, clamped to 25-38.
+  let fiberG = Math.round(energy/1000*14);
+  fiberG = Math.max(25, Math.min(38, fiberG));
+  if(isElderly) fiberG = Math.max(25, Math.min(30, fiberG)); // gentler target for seniors
+  // Fluid 30-35 mL/kg actual body weight (Panduan Klinis Gizi).
+  // Elderly: use 30 mL/kg (thirst sensation blunted, but avoid overload) with a 1500 mL floor.
+  // Kidney/heart failure: fluid may be restricted by the treating doctor -> flag, do not prescribe.
+  let fluidMl = Math.round(w * (isElderly ? 30 : 32));
+  if(isElderly) fluidMl = Math.max(fluidMl, 1500);
+  const fluidRestricted = !!(kidney || diseases.cad);
+  // Sodium: general <2300 mg/day; hypertension/heart/kidney tighten toward 1500-2000 mg/day
+  // (Panduan Klinis Gizi Sehat dan Sesuai Penyakit; WHO sodium intake guideline).
+  let sodiumMg = 2300;
+  if(diseases.htn || diseases.cad || diseases.stroke_i || diseases.stroke_h || kidney) sodiumMg = 1500;
+
+  lastResult = {
+    name:document.getElementById('name').value, bmi, catKey, bbi:Math.round(bbi), abw:abw?Math.round(abw):null,
+    bmr:Math.round(bmr), tdee:Math.round(tdee), energy, central, centralCut, sex, age,
+    proteinG, fatG, carbG, goalKey, adj, diseases:{...diseases},
+    fiberG, fluidMl, fluidRestricted, sodiumMg, elderly:isElderly,
+    proPct, fatPctActual, carbPctActual,
+    flags:{warfarin,steroid,metformin,diuretic,kidney,gout,liver,hyperKrisk,
+           levo:D.levothyroxine, ppi:(D.ppi||D.antacid), bisphos:D.bisphosphonate,
+           inh:D.isoniazid, hypoG:(D.sulfonylurea||D.insulin), elderly:isElderly,
+           dyslip, gastritis, osteoporosis, anemia, cancer, copd, thyroid},
+    drugs:D,
+    recognizedDrugs: recognizedDrugs.map(function(d){ return {id:d.id, en:d.en}; }),
+    interactions: buildInteractions(D, {dm:diseases.dm,htn:diseases.htn,cad:diseases.cad,
+                   stroke_i:diseases.stroke_i,stroke_h:diseases.stroke_h,kidney,gout,liver}),
+    liked:document.getElementById('liked').value, disliked:document.getElementById('disliked').value,
+    phone:document.getElementById('phone').value,
+    height:h, weight:w, waist:waist, activity:act,
+    others:others,
+    goalMode, recomp, underweightLossBlocked,
+    catName:null
+  };
+
+  renderAll(lastResult);
+  document.getElementById('resultCard').scrollIntoView({behavior:'smooth'});
+}
+
+/* ============================================================
+   RENDER RESULTS
+============================================================ */
+function renderAll(r){
+  const m = t();
+  // BMI banner
+  const catName = m.bmiLabels[r.catKey];
+  r.catName = catName;
+  const colors = {under:'#b8893b',normal:'#1f5d4c',over:'#b8893b',ob1:'#d35400',ob2:'#c0392b'};
+  const bg = {under:'#f6edda',normal:'#e7f1ec',over:'#f6edda',ob1:'#fdebe0',ob2:'#fbe9e7'};
+  const banner = document.getElementById('bmiBanner');
+  banner.style.background = bg[r.catKey];
+  banner.style.color = colors[r.catKey];
+  banner.innerHTML = `<div style="font-size:13px;letter-spacing:1px;text-transform:uppercase;opacity:.8">${m.mBMI} \u00b7 WHO Asia-Pasifik</div>
+    <div style="font-size:34px;font-weight:800;margin:4px 0">${r.bmi.toFixed(1)} kg/m\u00b2</div>
+    <div style="font-size:18px;font-weight:700">${catName}</div>`;
+
+  // metrics
+  const mg = document.getElementById('metricGrid');
+  let metrics = `<div class="metric"><div class="v">${r.bbi}</div><div class="l">${m.mBBI} (kg)</div></div>`;
+  if(r.abw) metrics += `<div class="metric"><div class="v">${r.abw}</div><div class="l">${m.mABW} (kg)</div></div>`;
+  metrics += `<div class="metric"><div class="v">${r.bmr}</div><div class="l">${m.mBMR} (kkal)</div></div>`;
+  metrics += `<div class="metric"><div class="v">${r.tdee}</div><div class="l">TDEE (kkal)</div></div>`;
+  mg.innerHTML = metrics;
+
+  // central obesity alert
+  const ca = document.getElementById('centralAlert');
+  if(r.central){
+    ca.innerHTML = `<div class="alert-central">\u26a0 ${m.central}<div style="font-size:13px;font-weight:600;margin-top:4px;opacity:.95">${m.centralSub} (&gt; ${r.centralCut} cm)</div></div>`;
+  } else ca.innerHTML = '';
+
+  document.getElementById('resultCard').classList.remove('hidden');
+
+  // daily needs
+  document.getElementById('s4Sub').textContent = m.needsSub(m[r.goalKey]);
+  document.getElementById('macroGrid').innerHTML =
+    `<div class="macro cal"><div class="v">${r.energy}</div><div class="l">${m.cal} (kkal)${m.perDay}</div></div>
+     <div class="macro pro"><div class="v">${r.proteinG} g</div><div class="l">${m.pro} \u00b7 ${r.proPct}%</div></div>
+     <div class="macro fat"><div class="v">${r.fatG} g</div><div class="l">${m.fat} \u00b7 ${r.fatPctActual}%</div></div>
+     <div class="macro carb"><div class="v">${r.carbG} g</div><div class="l">${m.carb} \u00b7 ${r.carbPctActual}%</div></div>`;
+  // secondary targets: fiber, fluid, sodium
+  const secBox = document.getElementById('secondaryTargets');
+  if(secBox){
+    const fluidTxt = r.fluidRestricted
+      ? (Math.round(r.fluidMl/100)/10 + ' L ' + m.fluidCheck)
+      : (Math.round(r.fluidMl/100)/10 + ' L');
+    secBox.innerHTML =
+      `<div class="sec-item"><b>${r.fiberG} g</b><span>${m.fiberLbl}</span></div>`+
+      `<div class="sec-item"><b>${fluidTxt}</b><span>${m.fluidLbl}</span></div>`+
+      `<div class="sec-item"><b>&lt; ${r.sodiumMg} mg</b><span>${m.sodiumLbl}</span></div>`;
+  }
+  // ---- FREE VERSION GATE ----
+  // The calculation itself is untouched: energy, protein, fat, carbohydrate, fiber,
+  // fluid and sodium are computed exactly as before for every goal. Only the DISPLAY
+  // is limited here. For the visceral-fat-loss / muscle-gain goal this build shows the
+  // daily requirement figures and then leaves the diet-adjustment, drug-interaction and
+  // 7-day-menu sections empty, replaced by the notice block.
+  // Note: goalKey is 'goalRecomp' only when a real fat-loss/muscle-gain plan is produced.
+  // If the user is underweight the app already converts that goal to maintenance
+  // ('goalMaintain'), so the notice correctly does not appear in that case.
+  const freeGate = (r.goalKey === 'goalRecomp');
+  const noticeEl = document.getElementById('freeNotice');
+  const adjEl = document.getElementById('adjustNotes');
+
+  if(freeGate){
+    // The diet-adjustment area is covered by the red notice, exactly like the 7-day menu area.
+    adjEl.classList.add('free-cover');
+    adjEl.innerHTML = '<div class="free-notice">' + m.freeNotice + '</div>';
+    document.getElementById('needsCard').classList.remove('hidden');
+    document.getElementById('interactionCard').classList.add('hidden');
+    document.getElementById('planCard').classList.add('hidden');
+    if(noticeEl){ noticeEl.innerHTML = m.freeNotice; noticeEl.classList.remove('hidden'); }
+  } else {
+    if(noticeEl) noticeEl.classList.add('hidden');
+    // adjustment notes
+    adjEl.classList.remove('free-cover');
+    adjEl.innerHTML = buildAdjustNotes(r);
+    document.getElementById('needsCard').classList.remove('hidden');
+
+    // drug interactions
+    renderInteractions(r);
+
+    // week plan
+    buildWeekPlan(r);
+    document.getElementById('planCard').classList.remove('hidden');
+  }
+
+  // exercise recommendation (calorie-, disease-, medication- and goal-aware)
+  renderExercise(r);
+}
+
+function renderInteractions(r){
+  const m = t();
+  const box = document.getElementById('interactionList');
+  const card = document.getElementById('interactionCard');
+  // Transparency: show which active ingredients were recognized from what the
+  // user typed (brand names are mapped to their active ingredient).
+  const rb = document.getElementById('drugRecogBox');
+  if(rb){
+    if(r.recognizedDrugs && r.recognizedDrugs.length){
+      const names = r.recognizedDrugs.map(function(d){ return LANG==='id'?d.id:d.en; }).join('; ');
+      rb.textContent = m.drugRecog + ' ' + names + '.';
+      rb.classList.remove('hidden');
+    } else { rb.classList.add('hidden'); }
+  }
+  if(!r.interactions || r.interactions.length===0){
+    box.innerHTML = `<div class="ix-none">${m.ixNone}</div>`;
+  } else {
+    const sevLabel = {info:m.sevInfo, caution:m.sevCaution, serious:m.sevSerious};
+    // order: serious first, then caution, then info
+    const order = {serious:0, caution:1, info:2};
+    const sorted = [...r.interactions].sort((a,b)=>order[a.sev]-order[b.sev]);
+    box.innerHTML = sorted.map(ix=>{
+      const txt = LANG==='id'?ix.id:ix.en;
+      return `<div class="ix ${ix.sev}"><span class="sev">${sevLabel[ix.sev]}</span>${txt}</div>`;
+    }).join('');
+  }
+  card.classList.remove('hidden');
+}
+
+/* ============================================================
+   DRUG INTERACTION ENGINE (drug-nutrient & drug-drug)
+============================================================ */
+/* ============================================================
+   DRUG DATABASE — brand (merek dagang Indonesia) -> active ingredient
+   Each entry: k = internal key, id/en = active-ingredient name shown to
+   the user, rx = detection regex covering the generic name AND common
+   Indonesian brand names. Detection is transparent: recognized active
+   ingredients are displayed back so the user can verify.
+============================================================ */
+const DRUG_DEFS = [
+  {k:'warfarin', id:'Warfarin', en:'Warfarin', rx:/warfarin|coumadin|simarc|notisil/},
+  {k:'doac', id:'Antikoagulan baru (rivaroksaban/apiksaban/dabigatran)', en:'DOAC (rivaroxaban/apixaban/dabigatran)', rx:/rivaroxaban|rivaroksaban|xarelto|apixaban|apiksaban|eliquis|dabigatran|pradaxa|edoxaban/},
+  {k:'aspirin', id:'Aspirin (asam asetilsalisilat)', en:'Aspirin (acetylsalicylic acid)', rx:/aspirin|asetosal|aspilet|asam asetilsalisilat|miniaspi|ascardia|cardio aspirin|farmasal|thrombo/},
+  {k:'clopidogrel', id:'Klopidogrel', en:'Clopidogrel', rx:/clopidogrel|klopidogrel|plavix|vaclo|placta|clidorel|therapi/},
+  {k:'nsaid', id:'Antinyeri NSAID', en:'NSAID pain reliever', rx:/ibuprofen|proris|arfen|diclofenac|diklofenak|voltaren|cataflam|natrium diklofenak|kalium diklofenak|asam mefenamat|mefenamic|ponstan|mefinal|ketoprofen|piroksikam|piroxicam|meloxicam|mobic|celecoxib|celebrex|etoricoxib|arcoxia|natrium diklofenak/},
+  {k:'metformin', id:'Metformin', en:'Metformin', rx:/metformin|glucophage|glucofix|diabex|forbetes|glumin|neodipar/},
+  {k:'sulfonylurea', id:'Sulfonilurea (glibenklamid/glimepirid/gliklazid)', en:'Sulfonylurea (glibenclamide/glimepiride/gliclazide)', rx:/glibenklamid|gliben|daonil|glimepirid|glimepiride|amaryl|anpiride|gliklazid|gliclazide|diamicron|glipizid|glucotrol/},
+  {k:'insulin', id:'Insulin', en:'Insulin', rx:/insulin|lantus|novorapid|levemir|apidra|humalog|tresiba|ryzodeg|novomix|humulin|actrapid|toujeo/},
+  {k:'sglt2', id:'SGLT2 inhibitor (empagliflozin/dapagliflozin)', en:'SGLT2 inhibitor (empagliflozin/dapagliflozin)', rx:/empagliflozin|jardiance|dapagliflozin|forxiga|canagliflozin|invokana|sglt2/},
+  {k:'dpp4', id:'DPP-4 inhibitor (sitagliptin/linagliptin)', en:'DPP-4 inhibitor (sitagliptin/linagliptin)', rx:/sitagliptin|januvia|linagliptin|trajenta|vildagliptin|galvus|saxagliptin/},
+  {k:'acei', id:'ACE-inhibitor', en:'ACE inhibitor', rx:/captopril|kaptopril|capoten|farmoten|lisinopril|noperten|ramipril|triatec|cardace|enalapril|tenace|perindopril|prexum|bioprexum|imidapril|quinapril/},
+  {k:'arb', id:'ARB (penghambat reseptor angiotensin)', en:'ARB (angiotensin receptor blocker)', rx:/losartan|cozaar|angiotan|valsartan|diovan|candesartan|kandesartan|blopress|canderin|irbesartan|aprovel|irtan|telmisartan|micardis|olmesartan|olmetec/},
+  {k:'ccb', id:'Antagonis kalsium (amlodipin/nifedipin)', en:'Calcium-channel blocker (amlodipine/nifedipine)', rx:/amlodipin|amlodipine|norvask|tensivask|amdixal|nifedipin|adalat|diltiazem|herbesser|verapamil|isoptin|felodipin/},
+  {k:'bblocker', id:'Beta-blocker', en:'Beta-blocker', rx:/bisoprolol|concor|maintate|beapro|propranolol|farmadral|atenolol|tenormin|farnormin|metoprolol|carvedilol|karvedilol|dilbloc|v-bloc|nebivolol/},
+  {k:'loop', id:'Diuretik loop (furosemid)', en:'Loop diuretic (furosemide)', rx:/furosemid|furosemide|lasix|uresix|farsix|impugan|torasemid/},
+  {k:'thiazide', id:'Diuretik tiazid (HCT)', en:'Thiazide diuretic (HCT)', rx:/hidroklorotiazid|hydrochlorothiazide|\bhct\b|indapamid|natrilix|chlorthalidone/},
+  {k:'spirono', id:'Spironolakton', en:'Spironolactone', rx:/spironolakton|spironolactone|aldactone|carpiaton|letonal|spirola/},
+  {k:'ksupp', id:'Suplemen kalium (KSR/KCl)', en:'Potassium supplement (KSR/KCl)', rx:/\bksr\b|kalium klorida|potassium chloride|\bkcl\b|aspar\s?k|suplemen kalium|kalium l-aspartat/},
+  {k:'statin', id:'Statin', en:'Statin', rx:/simvastatin|zocor|cholestat|atorvastatin|lipitor|atorsan|rosuvastatin|crestor|pravastatin|mevalotin|pravachol|lovastatin|\bstatin\b/},
+  {k:'fibrate', id:'Fibrat', en:'Fibrate', rx:/gemfibrozil|lopid|fenofibrat|fenofibrate|lipanthyl|hicholfen|evothyl/},
+  {k:'digoxin', id:'Digoksin', en:'Digoxin', rx:/digoksin|digoxin|lanoxin|fargoxin/},
+  {k:'levothyroxine', id:'Levotiroksin', en:'Levothyroxine', rx:/levotiroksin|levothyroxine|euthyrox|thyrax|eltroxin|tiroksin/},
+  {k:'ppi', id:'Obat lambung PPI (omeprazol dll.)', en:'Proton-pump inhibitor (omeprazole etc.)', rx:/omeprazol|omeprazole|losec|pumpitor|\bomz\b|lansoprazol|prosogan|lanpracid|pantoprazol|pantozol|esomeprazol|nexium|rabeprazol|pariet/},
+  {k:'antacid', id:'Antasida', en:'Antacid', rx:/antasida|antacid|mylanta|promag|polysilane|magasida|gelusil|waisan/},
+  {k:'bisphosphonate', id:'Bifosfonat (alendronat)', en:'Bisphosphonate (alendronate)', rx:/alendronat|alendronate|fosamax|risedronat|actonel|asam ibandronat|bonviva/},
+  {k:'isoniazid', id:'Isoniazid (obat TB)', en:'Isoniazid (TB drug)', rx:/isoniazid|\binh\b|rimstar|rifampisin|rifampicin|\bfdc\b tb/},
+  {k:'phenytoin', id:'Fenitoin', en:'Phenytoin', rx:/fenitoin|phenytoin|dilantin|kutoin/},
+  {k:'carbamazepine', id:'Karbamazepin', en:'Carbamazepine', rx:/karbamazepin|carbamazepine|tegretol|bamgetol/},
+  {k:'allopurinol', id:'Alopurinol', en:'Allopurinol', rx:/alopurinol|allopurinol|zyloric|puricemia|isoric/},
+  {k:'colchicine', id:'Kolkisin', en:'Colchicine', rx:/kolkisin|colchicine|colchicin|recolfar/},
+  {k:'corticosteroid', id:'Kortikosteroid', en:'Corticosteroid', rx:/prednison|prednisone|prednisolon|metilprednisolon|methylprednisolone|medrol|sanexon|lameson|hufamethason|dexamet|deksametason|dexaharsen|steroid/},
+  {k:'tetracycline', id:'Antibiotik tetrasiklin/doksisiklin', en:'Tetracycline/doxycycline antibiotic', rx:/tetrasiklin|tetracycline|doksisiklin|doxycycline|dohixat|siklidon|minosiklin/},
+  {k:'quinolone', id:'Antibiotik kuinolon (siprofloksasin/levofloksasin)', en:'Quinolone antibiotic (ciprofloxacin/levofloxacin)', rx:/siprofloksasin|ciprofloxacin|ciprofloxasin|baquinor|levofloksasin|levofloxacin|cravit|moksifloksasin|moxifloxacin|ofloksasin/},
+  {k:'metronidazole', id:'Metronidazol', en:'Metronidazole', rx:/metronidazol|metronidazole|flagyl|trichodazol/},
+  {k:'theophylline', id:'Teofilin/aminofilin', en:'Theophylline/aminophylline', rx:/teofilin|theophylline|aminofilin|aminophylline|bronsolvan|euphyllin/},
+  {k:'methotrexate', id:'Metotreksat', en:'Methotrexate', rx:/metotreksat|methotrexate|\bmtx\b|emthexate/},
+  {k:'maoi', id:'Antidepresan MAOI', en:'MAOI antidepressant', rx:/moclobemide|moklobemid|aurorix|selegiline|selegilin|fenelzin|phenelzine|tranylcypromine/},
+  {k:'calciumsupp', id:'Suplemen kalsium', en:'Calcium supplement', rx:/kalsium|calcium|caltrate|calcium lactate|kalk|osteocal|cdr\b/},
+  {k:'ironsupp', id:'Suplemen zat besi', en:'Iron supplement', rx:/zat besi|ferrous|fero|sulfas ferosus|sangobion|maltofer|hemobion|ferriz/}
+];
+
+function buildInteractions(D, cond){
+  const L = [];
+  const add=(sev,id,en)=>L.push({sev,id,en});
+  if(D.warfarin) add('caution',
+    "Warfarin \u00d7 Vitamin K: jaga asupan sayuran hijau (bayam, kangkung, brokoli, sawi) KONSISTEN setiap hari \u2014 jangan tiba-tiba banyak atau sedikit \u2014 dan periksa INR rutin.",
+    "Warfarin \u00d7 Vitamin K: keep green vegetables (spinach, kale, broccoli, bok choy) CONSISTENT every day \u2014 avoid sudden increases or decreases \u2014 and check INR regularly.");
+  if(D.metformin) add('info',
+    "Metformin \u00d7 Vitamin B12: penggunaan jangka panjang dapat menurunkan B12; pertimbangkan pemeriksaan berkala.",
+    "Metformin \u00d7 Vitamin B12: long-term use may lower B12; consider periodic testing.");
+  if(D.isoniazid) add('caution',
+    "Isoniazid \u00d7 Vitamin B6: berisiko neuropati; suplementasi piridoksin (B6) biasanya dianjurkan.",
+    "Isoniazid \u00d7 Vitamin B6: risk of neuropathy; pyridoxine (B6) supplementation is usually advised.");
+  if(D.statin||D.ccb) add('caution',
+    "Statin/Amlodipin \u00d7 Jus grapefruit: hindari grapefruit karena meningkatkan kadar obat dan risiko efek samping (nyeri otot).",
+    "Statin/Amlodipine \u00d7 Grapefruit juice: avoid grapefruit as it raises drug levels and side-effect risk (muscle pain).");
+  if(D.ppi||D.antacid) add('info',
+    "PPI/Antasida \u00d7 Mineral: dapat menurunkan penyerapan vitamin B12, zat besi, kalsium, dan magnesium pada penggunaan lama.",
+    "PPI/Antacid \u00d7 Minerals: may reduce absorption of vitamin B12, iron, calcium, and magnesium with long-term use.");
+  if(D.levothyroxine) add('caution',
+    "Levotiroksin: minum saat perut kosong (30\u201360 menit sebelum makan) dan beri jarak dari kalsium, zat besi, susu kedelai, dan kopi.",
+    "Levothyroxine: take on an empty stomach (30\u201360 min before food) and separate from calcium, iron, soy milk, and coffee.");
+  if(D.bisphosphonate) add('caution',
+    "Bifosfonat (alendronat): minum dengan air putih saat perut kosong, tetap tegak 30 menit, beri jarak dari kalsium atau susu.",
+    "Bisphosphonate (alendronate): take with plain water on an empty stomach, stay upright 30 min, separate from calcium or milk.");
+  if(D.corticosteroid) add('caution',
+    "Kortikosteroid: dapat menaikkan gula darah dan tekanan darah; cukupkan kalsium dan vitamin D, batasi garam.",
+    "Corticosteroid: can raise blood sugar and blood pressure; ensure calcium and vitamin D, limit salt.");
+  if(D.loop||D.thiazide) add('info',
+    "Diuretik (furosemid/HCT): dapat membuang kalium dan magnesium; pantau elektrolit sesuai anjuran dokter.",
+    "Diuretic (furosemide/HCT): can deplete potassium and magnesium; monitor electrolytes per physician advice.");
+  if(D.spirono) add('caution',
+    "Spironolakton: menahan kalium \u2014 batasi makanan sangat tinggi kalium (pisang berlebih, air kelapa) dan hindari garam pengganti berbahan kalium.",
+    "Spironolactone: retains potassium \u2014 limit very high-potassium foods (excess banana, coconut water) and avoid potassium-based salt substitutes.");
+  if(D.digoxin) add('serious',
+    "Digoksin: kadar kalium rendah meningkatkan risiko keracunan digoksin; jaga kalium tetap stabil dan pantau gejala.",
+    "Digoxin: low potassium increases digoxin toxicity risk; keep potassium stable and monitor for symptoms.");
+  if(D.phenytoin||D.carbamazepine) add('info',
+    "Fenitoin/Karbamazepin: dapat menurunkan vitamin D dan folat; bila memakai nutrisi enteral, beri jarak waktu dengan obat.",
+    "Phenytoin/Carbamazepine: may lower vitamin D and folate; if on tube feeding, separate timing from the drug.");
+  if(D.sulfonylurea||D.insulin) add('caution',
+    "Sulfonilurea/Insulin: jaga jadwal dan jumlah karbohidrat KONSISTEN tiap kali makan untuk mencegah gula darah turun (hipoglikemia).",
+    "Sulfonylurea/Insulin: keep carbohydrate timing and amount CONSISTENT at each meal to prevent low blood sugar (hypoglycemia).");
+  if(D.allopurinol) add('info',
+    "Alopurinol: perbanyak minum air putih untuk membantu pengeluaran asam urat.",
+    "Allopurinol: increase plain water intake to help uric-acid excretion.");
+  if(D.warfarin && (D.aspirin||D.clopidogrel||D.nsaid)) add('serious',
+    "Warfarin + Aspirin/Clopidogrel/NSAID: meningkatkan risiko PERDARAHAN \u2014 wajib dikonsultasikan ke dokter.",
+    "Warfarin + Aspirin/Clopidogrel/NSAID: increases BLEEDING risk \u2014 must be discussed with a doctor.");
+  if((D.acei||D.arb) && D.spirono) add('serious',
+    "ACE-inhibitor/ARB + Spironolakton: risiko kalium tinggi (hiperkalemia) \u2014 pantau kalium ketat.",
+    "ACE-inhibitor/ARB + Spironolactone: risk of high potassium (hyperkalemia) \u2014 monitor potassium closely.");
+  if((D.acei||D.arb) && (D.loop||D.thiazide)) add('info',
+    "ACE-inhibitor/ARB + Diuretik: efek penurun tekanan darah menguat; waspadai pusing dan tekanan darah terlalu rendah.",
+    "ACE-inhibitor/ARB + Diuretic: blood-pressure-lowering effect is enhanced; watch for dizziness and low blood pressure.");
+  if(D.statin && D.fibrate) add('serious',
+    "Statin + Fibrat (gemfibrozil): meningkatkan risiko kerusakan otot (miopati/rabdomiolisis) \u2014 konsultasikan ke dokter.",
+    "Statin + Fibrate (gemfibrozil): increases muscle-damage risk (myopathy/rhabdomyolysis) \u2014 consult a doctor.");
+  if(D.digoxin && (D.loop||D.thiazide)) add('serious',
+    "Digoksin + Diuretik: diuretik menurunkan kalium sehingga meningkatkan risiko keracunan digoksin.",
+    "Digoxin + Diuretic: diuretics lower potassium, increasing digoxin toxicity risk.");
+  // ---- Additional rules (expanded drug database) ----
+  if(D.ksupp) add('serious',
+    "Suplemen kalium (KSR/KCl): jangan digabung dengan makanan sangat tinggi kalium atau garam pengganti berbahan kalium tanpa pengawasan \u2014 risiko hiperkalemia.",
+    "Potassium supplement (KSR/KCl): do not combine with very high-potassium foods or potassium-based salt substitutes without supervision \u2014 hyperkalemia risk.");
+  if(D.ksupp && (D.spirono||D.acei||D.arb)) add('serious',
+    "Suplemen kalium + Spironolakton/ACE-inhibitor/ARB: risiko kalium sangat tinggi (hiperkalemia berat) \u2014 wajib dipantau dokter.",
+    "Potassium supplement + Spironolactone/ACE inhibitor/ARB: risk of severely high potassium \u2014 must be monitored by a doctor.");
+  if(D.nsaid && (D.acei||D.arb) && (D.loop||D.thiazide)) add('serious',
+    "NSAID + ACE-inhibitor/ARB + Diuretik (\u201ctriple whammy\u201d): kombinasi ini dapat mencederai ginjal secara akut \u2014 cukupi cairan dan konsultasikan ke dokter.",
+    "NSAID + ACE inhibitor/ARB + Diuretic (\u201ctriple whammy\u201d): this combination can cause acute kidney injury \u2014 maintain fluid intake and consult a doctor.");
+  if(D.doac) add('caution',
+    "Antikoagulan baru (rivaroksaban/apiksaban/dabigatran): hindari jus grapefruit dan suplemen herbal (mis. ginkgo, bawang putih dosis tinggi) yang menambah risiko perdarahan.",
+    "DOAC (rivaroxaban/apixaban/dabigatran): avoid grapefruit juice and herbal supplements (e.g., ginkgo, high-dose garlic) that add bleeding risk.");
+  if(D.doac && (D.aspirin||D.clopidogrel||D.nsaid)) add('serious',
+    "Antikoagulan baru + Aspirin/Clopidogrel/NSAID: meningkatkan risiko PERDARAHAN \u2014 wajib dikonsultasikan ke dokter.",
+    "DOAC + Aspirin/Clopidogrel/NSAID: increases BLEEDING risk \u2014 must be discussed with a doctor.");
+  if(D.sglt2) add('caution',
+    "SGLT2 inhibitor: cukupi minum air putih (risiko dehidrasi) dan jangan berpuasa berkepanjangan tanpa arahan dokter; jaga kebersihan area kemaluan.",
+    "SGLT2 inhibitor: keep fluid intake adequate (dehydration risk) and avoid prolonged fasting without medical advice; maintain genital hygiene.");
+  if(D.tetracycline||D.quinolone) add('caution',
+    "Antibiotik tetrasiklin/doksisiklin atau kuinolon: beri jarak 2\u20133 jam dari susu, yogurt, keju, serta suplemen kalsium/zat besi karena penyerapan obat berkurang.",
+    "Tetracycline/doxycycline or quinolone antibiotics: separate by 2\u20133 hours from milk, yogurt, cheese, and calcium/iron supplements because absorption is reduced.");
+  if(D.metronidazole) add('caution',
+    "Metronidazol: hindari alkohol (termasuk obat batuk beralkohol) selama pengobatan dan 48 jam sesudahnya \u2014 dapat memicu mual dan muntah hebat.",
+    "Metronidazole: avoid alcohol (including alcohol-containing cough syrups) during treatment and for 48 hours after \u2014 it can trigger severe nausea and vomiting.");
+  if(D.theophylline) add('caution',
+    "Teofilin/aminofilin: batasi kopi, teh kental, dan cokelat (kafein) karena memperkuat efek samping seperti jantung berdebar dan gelisah.",
+    "Theophylline/aminophylline: limit coffee, strong tea, and chocolate (caffeine) as they amplify side effects such as palpitations and restlessness.");
+  if(D.methotrexate) add('caution',
+    "Metotreksat: biasanya perlu suplementasi asam folat sesuai anjuran dokter; hindari alkohol karena membebani hati.",
+    "Methotrexate: folic-acid supplementation is usually needed as directed; avoid alcohol as it burdens the liver.");
+  if(D.maoi) add('serious',
+    "Antidepresan MAOI: hindari makanan tinggi tiramin (keju tua, tape, tauco, terasi, produk fermentasi, daging olahan) \u2014 dapat memicu lonjakan tekanan darah berbahaya.",
+    "MAOI antidepressant: avoid high-tyramine foods (aged cheese, fermented soy products, shrimp paste, cured meats) \u2014 they can trigger a dangerous blood-pressure surge.");
+  if(D.calciumsupp && D.levothyroxine) add('caution',
+    "Suplemen kalsium + Levotiroksin: beri jarak minimal 4 jam \u2014 kalsium menurunkan penyerapan hormon tiroid.",
+    "Calcium supplement + Levothyroxine: separate by at least 4 hours \u2014 calcium reduces thyroid-hormone absorption.");
+  if(D.ironsupp && D.levothyroxine) add('caution',
+    "Suplemen zat besi + Levotiroksin: beri jarak minimal 4 jam karena penyerapan hormon tiroid berkurang.",
+    "Iron supplement + Levothyroxine: separate by at least 4 hours because thyroid-hormone absorption is reduced.");
+  if(D.ironsupp) add('info',
+    "Suplemen zat besi: penyerapan meningkat bila diminum bersama sumber vitamin C (jeruk, jambu) dan menurun bila bersama teh, kopi, atau susu.",
+    "Iron supplement: absorption improves with vitamin C sources (orange, guava) and decreases with tea, coffee, or milk.");
+  if(D.colchicine) add('info',
+    "Kolkisin: hindari jus grapefruit; bila muncul diare berat atau nyeri otot, segera hubungi dokter.",
+    "Colchicine: avoid grapefruit juice; if severe diarrhea or muscle pain occurs, contact a doctor promptly.");
+  if(D.sglt2 && (D.loop||D.thiazide)) add('caution',
+    "SGLT2 inhibitor + Diuretik: risiko dehidrasi dan tekanan darah turun bertambah \u2014 pantau asupan cairan dan gejala pusing.",
+    "SGLT2 inhibitor + Diuretic: increased risk of dehydration and low blood pressure \u2014 monitor fluid intake and dizziness.");
+  if(cond && cond.kidney && D.nsaid) add('serious',
+    "NSAID pada gangguan ginjal: obat antinyeri golongan ini dapat memperburuk fungsi ginjal \u2014 diskusikan alternatif dengan dokter.",
+    "NSAIDs with kidney disease: this class of pain reliever can worsen kidney function \u2014 discuss alternatives with a doctor.");
+  if(D.clopidogrel && /omeprazol/.test(document.getElementById('meds').value.toLowerCase())) add('caution',
+    "Klopidogrel + Omeprazol: omeprazol dapat menurunkan efektivitas klopidogrel; tanyakan alternatif (mis. pantoprazol) ke dokter.",
+    "Clopidogrel + Omeprazole: omeprazole may reduce clopidogrel effectiveness; ask about alternatives (e.g. pantoprazole).");
+  const antihtnCount = [D.acei||D.arb, D.ccb, D.loop||D.thiazide, D.bblocker].filter(Boolean).length;
+  if(antihtnCount>=2) add('info',
+    "Beberapa obat tekanan darah sekaligus: waspadai tekanan darah terlalu rendah (pusing saat berdiri).",
+    "Multiple blood-pressure medicines together: watch for blood pressure dropping too low (dizziness on standing).");
+  if((D.sulfonylurea||D.insulin) && D.bblocker) add('caution',
+    "Insulin/Sulfonilurea + Beta-blocker: gejala gula darah rendah dapat tersamarkan; pantau gula darah lebih ketat.",
+    "Insulin/Sulfonylurea + Beta-blocker: symptoms of low blood sugar may be masked; monitor glucose more closely.");
+  return L;
+}
+
+function buildAdjustNotes(r){
+  const isID = LANG==='id';
+  const m = t();
+  const lines = [];
+  const A = {
+    dm: isID?"Diabetes: karbohidrat dijaga di paruh bawah rentang anjuran (\u226455% energi) dengan penekanan utama pada KUALITAS \u2014 indeks glikemik rendah, tinggi serat, jadwal makan konsisten, gula tambahan dihindari. Protein dinaikkan (~1,2 g/kg) untuk rasa kenyang dan kendali gula darah.":"Diabetes: carbohydrate kept in the lower half of the recommended range (\u226455% of energy) with the main emphasis on QUALITY \u2014 low glycemic index, high fiber, consistent meal timing, added sugar avoided. Protein raised (~1.2 g/kg) for satiety and glycemic control.",
+    htn: isID?"Hipertensi: natrium dibatasi (<1.500\u20132.300 mg/hari), tinggi kalium (sayur & buah), makanan asin/olahan dikurangi.":"Hypertension: sodium limited (<1,500\u20132,300 mg/day), high potassium (vegetables & fruit), salty/processed foods reduced.",
+    heart: isID?"Jantung/Stroke sumbatan: lemak jenuh dibatasi, diutamakan lemak tak jenuh (ikan, minyak zaitun, alpukat).":"Heart/Ischemic stroke: saturated fat limited, unsaturated fats prioritized (fish, olive oil, avocado).",
+    strokeH: isID?"Stroke perdarahan: tekstur lunak dipilih untuk kemudahan menelan; pantau risiko tersedak.":"Hemorrhagic stroke: soft textures chosen for easier swallowing; monitor choking risk.",
+    kidney: isID?"Penyakit ginjal: protein dibatasi (~0,8 g/kg), kalium & fosfat diperhatikan sesuai anjuran dokter.":"Kidney disease: protein limited (~0.8 g/kg), potassium & phosphate monitored per physician advice.",
+    gout: isID?"Asam urat: makanan tinggi purin (jeroan, sebagian seafood) dibatasi.":"Gout: high-purine foods (organ meats, some seafood) limited.",
+    liver: isID?"Penyakit hati: protein adekuat dipertahankan untuk mencegah pengecilan otot.":"Liver disease: adequate protein maintained to prevent muscle wasting.",
+    dyslip: isID?"Kolesterol tinggi: lemak total dibatasi (~25% energi), lemak jenuh dikurangi, diutamakan lemak tak jenuh & tinggi serat.":"High cholesterol: total fat limited (~25% of energy), saturated fat reduced, unsaturated fats & high fiber prioritized.",
+    gastritis: isID?"Maag/GERD: dipilih makanan bertekstur lembut dan tidak merangsang; makan porsi kecil lebih sering.":"Gastritis/GERD: soft, non-irritating foods selected; eat smaller portions more frequently.",
+    osteoporosis: isID?"Osteoporosis: diutamakan sumber kalsium (susu/yogurt, ikan berduri lunak) dan cukup vitamin D.":"Osteoporosis: calcium sources prioritized (milk/yogurt, small bony fish) with adequate vitamin D.",
+    anemia: isID?"Anemia: diutamakan sumber zat besi (daging merah, hati, tempe, sayur hijau) dipadukan sumber vitamin C agar penyerapan meningkat.":"Anemia: iron sources prioritized (red meat, liver, tempeh, leafy greens) paired with vitamin C sources to boost absorption.",
+    cancer: isID?"Kanker/pemulihan: kebutuhan protein dinaikkan (\u22651,3 g/kg) dan dipilih makanan padat gizi yang mudah dimakan.":"Cancer/recovery: protein need increased (\u22651.3 g/kg) with nutrient-dense, easy-to-eat foods.",
+    copd: isID?"PPOK/paru: karbohidrat tidak berlebihan (\u226450% energi) dan protein dicukupkan untuk menjaga otot pernapasan.":"COPD/lung disease: carbohydrate kept moderate (\u226450% of energy) with adequate protein to maintain respiratory muscles.",
+    elderly: isID?"Lansia (\u226560 th): protein dinaikkan ~1,2 g/kg untuk mencegah penyusutan otot (sarkopenia); menu mengikuti pola Diet MIND penyehat otak dengan tekstur lebih lembut. Perhatikan kecukupan vitamin D, kalsium, dan vitamin B12 \u2014 terutama bila memakai metformin atau obat lambung jangka panjang.":"Seniors (\u226560 yr): protein raised to ~1.2 g/kg to prevent muscle loss (sarcopenia); the menu follows the brain-protective MIND pattern with softer textures. Ensure adequate vitamin D, calcium, and vitamin B12 \u2014 especially with long-term metformin or acid-suppressing drugs.",
+    thyroid: isID?"Gangguan tiroid: bila memakai levotiroksin, beri jarak dengan kalsium, zat besi, susu kedelai, dan kopi.":"Thyroid disorder: if taking levothyroxine, separate it from calcium, iron, soy milk, and coffee.",
+    warfarin: isID?"Warfarin: jaga asupan sayuran tinggi vitamin K (bayam, kangkung, brokoli) KONSISTEN setiap hari; jangan berubah-ubah drastis.":"Warfarin: keep vitamin-K\u2013rich vegetables (spinach, kale, broccoli) CONSISTENT daily; avoid drastic changes.",
+    steroid: isID?"Kortikosteroid: pantau gula darah; cukupkan kalsium & vitamin D; batasi garam.":"Corticosteroid: monitor blood sugar; ensure calcium & vitamin D; limit salt.",
+    metformin: isID?"Metformin: pantau kemungkinan kekurangan vitamin B12 jangka panjang.":"Metformin: monitor for long-term vitamin B12 deficiency.",
+    diuretic: isID?"Diuretik: perhatikan keseimbangan kalium; konsultasikan kebutuhan kalium dengan dokter.":"Diuretic: watch potassium balance; discuss potassium needs with your doctor.",
+    hyperK: isID?"Risiko kalium tinggi (spironolakton / ACE-inhibitor dengan gangguan ginjal): makanan sangat tinggi kalium dibatasi (mis. pisang, jeruk berlebih).":"High-potassium risk (spironolactone / ACE-inhibitor with kidney impairment): very high-potassium foods are limited (e.g. banana, excess orange).",
+    levo: isID?"Levotiroksin: jadwalkan obat terpisah dari makanan tinggi kalsium/zat besi dan kopi.":"Levothyroxine: schedule the drug separately from high-calcium/iron foods and coffee.",
+    ppi: isID?"PPI/Antasida: pantau kemungkinan kekurangan B12, zat besi, kalsium, dan magnesium.":"PPI/Antacid: monitor for possible B12, iron, calcium, and magnesium deficiency.",
+    bisphos: isID?"Bifosfonat: minum dengan air putih saat perut kosong, beri jarak dari kalsium dan susu.":"Bisphosphonate: take with plain water on an empty stomach, separate from calcium and milk.",
+    inh: isID?"Isoniazid: suplementasi vitamin B6 (piridoksin) umumnya dianjurkan.":"Isoniazid: vitamin B6 (pyridoxine) supplementation is generally advised.",
+    hypoG: isID?"Insulin/obat gula: jaga jumlah & jadwal karbohidrat konsisten setiap kali makan untuk mencegah hipoglikemia.":"Insulin/glucose-lowering drugs: keep carbohydrate amount & timing consistent each meal to prevent hypoglycemia.",
+    recomp: isID?"Program turun lemak & naik otot: protein ditingkatkan (\u22481,6 g/kg) untuk membangun otot, karbohidrat olahan dibatasi untuk menyasar lemak viseral, disertai defisit kalori bertahap. Padukan dengan latihan beban 2\u20134x/minggu.":"Fat-loss & muscle-gain program: protein increased (\u22481.6 g/kg) to build muscle, refined carbohydrate limited to target visceral fat, with a gradual calorie deficit. Combine with resistance training 2\u20134x/week.",
+    uwBlock: isID?"Catatan: indeks massa tubuh Anda tergolong kurang, sehingga program penurunan berat badan tidak diterapkan demi keamanan. Menu disusun untuk pemeliharaan/penambahan berat badan.":"Note: your BMI is in the underweight range, so a weight-loss program is not applied for safety. The menu is set for maintenance/weight gain."
+  };
+  const seen = new Set();
+  if(r.underweightLossBlocked && A.uwBlock){ lines.push(A.uwBlock); }
+  r.adj.forEach(k=>{ if(A[k] && !seen.has(k)){ lines.push(A[k]); seen.add(k);} });
+  // liked/disliked notes
+  if(r.disliked && r.disliked.trim()) lines.push(m.avoidNote(r.disliked.trim()));
+  if(r.liked && r.liked.trim()) lines.push(m.likeNote(r.liked.trim()));
+  if(lines.length===0) lines.push(m.notesNone);
+  return `<b>${m.adjTitle}</b><ul style="margin:8px 0 0;padding-left:18px">`+lines.map(l=>`<li>${l}</li>`).join('')+`</ul>`;
+}
+
+/* ============================================================
+   WEEK MENU BUILDER
+============================================================ */
+function nameOf(item){ return LANG==='id'?item.n_id:item.n_en; }
+function urtOf(item){ return LANG==='id'?(item.u_id||''):(item.u_en||''); }
+function itemLabel(item, factor){
+  const f = factor||1;
+  const g = item.g ? Math.max(5, Math.round(item.g*f/5)*5) : null;
+  const urt = urtOf(item);
+  let suffix = '';
+  if(urt && g) suffix = ' \u2014 '+urt+' (\u2248'+g+' g)';
+  else if(g) suffix = ' \u2014 \u2248'+g+' g';
+  else if(urt) suffix = ' \u2014 '+urt;
+  return nameOf(item)+suffix;
+}
+
+function isDisliked(item, dislikedRaw){
+  if(!dislikedRaw) return false;
+  const terms = dislikedRaw.toLowerCase().split(/[,;\n]+/).map(s=>s.trim()).filter(Boolean);
+  const nm = (item.n_id+" "+item.n_en).toLowerCase();
+  return terms.some(t=> t.length>=2 && nm.includes(t));
+}
+function isLiked(item, likedRaw){
+  if(!likedRaw) return false;
+  const terms = likedRaw.toLowerCase().split(/[,;\n]+/).map(s=>s.trim()).filter(Boolean);
+  const nm = (item.n_id+" "+item.n_en).toLowerCase();
+  return terms.some(t=> t.length>=2 && nm.includes(t));
+}
+
+// filter food list by disease/medication constraints
+function allowed(item, r){
+  // disliked removed entirely
+  if(isDisliked(item, r.disliked)) return false;
+  // gout: remove high purine
+  if(r.flags.gout && item.tags.includes('highPurine')) return false;
+  // heart / ischemic stroke: avoid saturated coconut milk
+  if((r.diseases.cad||r.diseases.stroke_i) && item.tags.includes('sat')) return false;
+  // hyperkalemia risk (spironolactone, or ACEi/ARB + kidney): remove very-high-K foods
+  if(r.flags.hyperKrisk && item.tags.includes('highKstrong')) return false;
+  // For hyperkalemia risk or kidney disease, also exclude banana-family fruits
+  // (potassium ~419 mg/100 g per source data) to keep potassium load safe.
+  if((r.flags.hyperKrisk || r.flags.kidney) && item.tags.includes('highK') && item.tags.includes('potassium')) return false;
+  // kidney disease (any): also limit very-high-K strong foods
+  if(r.flags.kidney && item.tags.includes('highKstrong')) return false;
+  // Diabetes: strictly avoid high-GI FRUITS (e.g., watermelon GI ~72-76); low/medium-GI
+  // fruit alternatives are always available. High-GI staple carbs are handled by scoring
+  // (kept available so an energy target can still be met if a patient dislikes many items),
+  // but high-GI fruit is excluded outright because low-GI fruit fully covers the group.
+  // Ref: Atkinson FS et al. Am J Clin Nutr 2021;114(5):1625-32 (DOI 10.1093/ajcn/nqab233);
+  // Evert AB et al. Diabetes Care 2019;42(5):731-54 (DOI 10.2337/dci19-0014).
+  if(r.diseases.dm && r.group==='fruit' && item.tags.includes('highGI')) return false;
+  return true;
+}
+
+function score(item, r){
+  let s = 0;
+  if(isLiked(item, r.liked)) s += 10;           // strongly prioritize liked
+  if(r.diseases.dm){
+    // Diabetes: strongly prefer low-GI, discourage medium-GI, strongly discourage high-GI.
+    // Ref: Evert AB et al. Diabetes Care 2019 (DOI 10.2337/dci19-0014);
+    // Atkinson FS et al. Am J Clin Nutr 2021 (DOI 10.1093/ajcn/nqab233).
+    if(item.tags.includes('lowGI')) s+=4;
+    if(item.tags.includes('medGI')) s-=2;
+    if(item.tags.includes('highGI')) s-=5;
+    if(item.tags.includes('fiber')) s+=2;
+  }
+  if(r.diseases.htn){ if(item.tags.includes('potassium')) s+=2; if(item.tags.includes('sat')) s-=2; }
+  if(r.diseases.cad||r.diseases.stroke_i){ if(item.tags.includes('heartHealthy')||item.tags.includes('omega3')||item.tags.includes('unsat')) s+=3; }
+  if(r.diseases.stroke_h){ if(item.tags.includes('soft')) s+=4; else s-=2; }
+  if(r.flags.kidney){ if(item.tags.includes('leanMeat')||item.tags.includes('plant')) s+=1; if(item.tags.includes('highK')) s-=2; }
+  if(r.flags.hyperKrisk){ if(item.tags.includes('highK')) s-=3; }
+  // Fat-loss + muscle program: favor lean protein, fiber, low-GI; penalize refined high-GI carbs
+  if(r.recomp){
+    if(item.tags.includes('leanMeat')||item.tags.includes('plant')||item.tags.includes('omega3')) s+=3;
+    if(item.tags.includes('fiber')||item.tags.includes('lowGI')) s+=2;
+    if(item.tags.includes('medGI')) s-=1;
+    if(item.tags.includes('highGI')) s-=4;
+  }
+  // ---- ELDERLY (>=60): MIND diet for brain health + softer textures for anorexia of aging ----
+  // Refs: Nijssen KMR et al. J Nutr 2024 (MIND diet, DOI 10.1016/j.tjnut.2024.01.024);
+  //       Cox NJ et al. Nutrients 2019 (anorexia of aging, DOI 10.3390/nu11010144);
+  //       Pourmotabbed A et al. Nutr Neurosci 2024 (avoid ultra-processed/high-GI, DOI 10.1080/1028415X.2024.2351320).
+  if(r.flags.elderly){
+    // MIND "brain-friend" foods: leafy greens (vitK+fiber), fish/omega-3, plant protein, berries/antioxidant fruit, whole grains
+    if(item.tags.includes('omega3')) s+=3;                       // fatty fish >=1x/wk
+    if(item.tags.includes('vitK')&&item.tags.includes('fiber')) s+=3; // leafy greens >=6/wk
+    if(item.tags.includes('plant')) s+=2;                        // tempe/tahu/legumes
+    if(item.tags.includes('unsat')||item.tags.includes('heartHealthy')) s+=2;
+    if(item.tags.includes('vitC')||item.tags.includes('vitA')) s+=1; // colorful antioxidant produce
+    if(item.tags.includes('lowGI')||item.tags.includes('fiber')) s+=2; // whole grains, high fiber
+    if(item.tags.includes('highGI')) s-=3;                       // limit refined carbs
+    if(item.tags.includes('sat')) s-=2;                          // limit saturated (butter/coconut)
+    // Softer, easier-to-chew/swallow foods help with poor appetite & dental issues
+    if(item.tags.includes('soft')) s+=3;
+    if(item.tags.includes('dairy')) s+=1;                        // protein-rich snacks (yogurt/milk)
+  }
+  // ---- Conditions written by the user in the free-text fields ----
+  if(r.flags.dyslip){
+    if(item.tags.includes('unsat')||item.tags.includes('heartHealthy')||item.tags.includes('omega3')) s+=3;
+    if(item.tags.includes('fiber')) s+=2;
+    if(item.tags.includes('sat')) s-=4;
+  }
+  if(r.flags.gastritis){
+    if(item.tags.includes('soft')) s+=3;
+    if(item.tags.includes('fiber')) s+=1;
+  }
+  if(r.flags.osteoporosis){
+    if(item.tags.includes('dairy')) s+=6;                        // milk/yogurt: main calcium source
+    if(item.tags.includes('omega3')) s+=2;                       // small bony fish also supply calcium
+    if(item.tags.includes('vitK')&&item.tags.includes('fiber')) s+=2; // dark leafy greens (calcium + vitamin K)
+    if(item.tags.includes('plant')) s+=1;                        // tempeh/tofu (calcium-set tofu)
+  }
+  if(r.flags.anemia){
+    if(item.tags.includes('iron')) s+=4;
+    if(item.tags.includes('vitC')) s+=3;
+    if(item.tags.includes('plant')) s+=1;
+  }
+  if(r.flags.cancer){
+    if(item.tags.includes('leanMeat')||item.tags.includes('plant')||item.tags.includes('dairy')) s+=2;
+    if(item.tags.includes('soft')) s+=2;
+  }
+  if(r.flags.copd){
+    if(item.tags.includes('leanMeat')||item.tags.includes('plant')) s+=2;
+    if(item.tags.includes('unsat')) s+=1;
+    if(item.tags.includes('highGI')) s-=2;
+  }
+  return s;
+}
+
+// pick item by rotating through a sorted-by-score list with daily offset, skipping disallowed
+function pick(list, r, dayIdx, slot){
+  const pool = list.filter(it=>allowed(it,r));
+  if(pool.length===0) return null;
+  // sort by score desc, but keep variety using day-based rotation among top candidates
+  const scored = pool.map(it=>({it,s:score(it,r)})).sort((a,b)=>b.s-a.s);
+  // take top tier (those within 3 pts of best) for variety. If the top tier is too
+  // narrow (one food scores far above the rest), fall back to the top-5 highest-scoring
+  // foods rather than the whole pool, so clinical prioritization is preserved.
+  const best = scored[0].s;
+  let tier = scored.filter(x=>x.s>=best-3).map(x=>x.it);
+  if(tier.length<3) tier = scored.slice(0, Math.min(5, scored.length)).map(x=>x.it);
+  // variationSeed shifts the rotation so "another variation" yields different substitute foods
+  const idx = (dayIdx*3 + slot + (variationSeed*5)) % tier.length;
+  return tier[idx];
+}
+
+function regenerateMenu(){
+  if(!lastResult || !lastResult._plans) return;   // no menu to vary in the free build
+  variationSeed = (variationSeed + 1) % 7; // cycle through distinct substitute combinations
+  buildWeekPlan(lastResult);
+  const pc = document.getElementById('planCard');
+  if(pc) pc.scrollIntoView({behavior:'smooth'});
+}
+
+function buildWeekPlan(r){
+  const m = t();
+  const days = m.days;
+  // Elderly (>=60) menu note: MIND diet + soft texture + higher protein + small frequent meals
+  const elNote = document.getElementById('elderlyMenuNote');
+  if(elNote){
+    if(r.flags && r.flags.elderly){ elNote.textContent = m.elderlyMenuNote; elNote.classList.remove('hidden'); }
+    else { elNote.classList.add('hidden'); }
+  }
+  // meal energy split: breakfast 25%, snack1 10%, lunch 30%, snack2 5%, dinner 30%
+  // We'll compose with carb+protein+veg+fruit+fat servings scaled to hit ~energy.
+  const plans = [];
+  for(let d=0; d<7; d++){
+    plans.push(composeDay(r, d));
+  }
+  r._plans = plans;
+
+  // tabs
+  const tabs = document.getElementById('dayTabs');
+  tabs.innerHTML = days.map((dn,i)=>`<button class="${i===0?'active':''}" data-day="${i}" type="button">${dn}</button>`).join('');
+  // wire day tab buttons (event delegation re-bound each build)
+  Array.prototype.forEach.call(tabs.querySelectorAll('button'), function(b){
+    b.addEventListener('click', function(){ showDay(parseInt(b.getAttribute('data-day'),10)); });
+  });
+  showDay(0);
+}
+
+function composeDay(r, d){
+  // Servings derived from macro targets.
+  let carbServings = Math.max(2, Math.round(r.carbG/40));     // ~40g carb each
+  let proteinServings = Math.max(3, Math.round(r.proteinG/14)); // ~14g protein each (avg)
+  let fatServings = Math.max(1, Math.round(r.fatG/6));         // ~6g fat each
+  let fruitServings = 2;                                       // fruit contributes carbs
+  carbServings = Math.max(1, carbServings - Math.round(fruitServings*12/40));
+
+  const dist = {
+    breakfast:{carb:0,pro:0,veg:0,fruit:0,fat:0},
+    snack1:{carb:0,pro:0,veg:0,fruit:0,fat:0},
+    lunch:{carb:0,pro:0,veg:0,fruit:0,fat:0},
+    snack2:{carb:0,pro:0,veg:0,fruit:0,fat:0},
+    dinner:{carb:0,pro:0,veg:0,fruit:0,fat:0}
+  };
+  function spreadMains(total, key){
+    const keys=['lunch','breakfast','dinner']; const weights=[0.4,0.3,0.3];
+    const alloc=keys.map((k,idx)=>Math.round(total*weights[idx]));
+    let sum=alloc.reduce((a,b)=>a+b,0);
+    while(sum<total){alloc[sum%3]++;sum++;}
+    while(sum>total){var i=sum%3; if(alloc[i]>0){alloc[i]--;} sum--;}
+    keys.forEach((k,idx)=>dist[k][key]+=alloc[idx]);
+  }
+  spreadMains(carbServings,'carb');
+  spreadMains(proteinServings,'pro');
+  spreadMains(fatServings,'fat');
+  dist.breakfast.veg=1; dist.lunch.veg=1; dist.dinner.veg=1;
+  dist.snack1.fruit=1; dist.snack2.fruit = fruitServings>1?1:0;
+  ['breakfast','lunch','dinner'].forEach(k=>{ if(dist[k].pro===0) dist[k].pro=1; });
+  if(proteinServings>=5) dist.snack2.pro=1;
+
+  const slotKeys=['breakfast','snack1','lunch','snack2','dinner'];
+  const labelKey={breakfast:'breakfast',snack1:'snack',lunch:'lunch',snack2:'snack',dinner:'dinner'};
+  // Warfarin: keep a CONSISTENT vitamin-K vegetable source to stabilize INR
+  const vegList = r.flags.warfarin ? FOODS.veg.filter(v=>v.tags.includes('vitK')) : FOODS.veg;
+  let slotCounter=0;
+  let meals = slotKeys.map(sk=>{
+    const sl=dist[sk]; const items=[]; let kcal=0,p=0,f=0,c=0;
+    function addN(list,count,grp){ for(let k=0;k<count;k++){ r.group=grp; const it=pick(list,r,d,slotCounter++); if(it){items.push(it);kcal+=it.kcal;p+=it.p;f+=it.f;c+=it.c;} } r.group=null; }
+    addN(FOODS.carb, sl.carb, 'carb');
+    addN(FOODS.protein, sl.pro, 'protein');
+    addN(vegList, sl.veg, 'veg');
+    addN(FOODS.fruit, sl.fruit, 'fruit');
+    addN(FOODS.fat, sl.fat, 'fat');
+    return {key:labelKey[sk], items, kcal, p, f, c};
+  });
+
+  // ---- Calibration: scale portions to match energy target within ~5% ----
+  let rawTotal = meals.reduce((a,m)=>a+m.kcal,0);
+  let factor = r.energy / rawTotal;
+  // keep factor within sensible bounds for portion realism
+  factor = Math.max(0.6, Math.min(1.6, factor));
+  meals.forEach(m=>{
+    m.kcal = Math.round(m.kcal*factor);
+    m.p = Math.round(m.p*factor);
+    m.f = Math.round(m.f*factor);
+    m.c = Math.round(m.c*factor);
+  });
+  // store portion factor as percent for display (e.g. 0.85 -> "85% porsi standar")
+  const portionPct = Math.round(factor*100);
+  return {meals, portionPct, factor};
+}
+
+function showDay(i){
+  const r = lastResult; const m = t();
+  if(!r || !r._plans) return;   // free build: no menu for the fat-loss goal
+  document.querySelectorAll('#dayTabs button').forEach((b,bi)=>b.classList.toggle('active',bi===i));
+  const plan = r._plans[i];
+  const meals = plan.meals;
+  let totK=0,totP=0,totF=0,totC=0;
+  meals.forEach(ml=>{totK+=ml.kcal;totP+=ml.p;totF+=ml.f;totC+=ml.c;});
+  const labels = {breakfast:m.breakfast, lunch:m.lunch, dinner:m.dinner, snack:m.snack};
+  let html = `<div class="day-summary">${m.daySummary(totK,totP,totF,totC)}`;
+  if(plan.portionPct && plan.portionPct!==100){
+    const pNote = LANG==='id'
+      ? ` \u00b7 Porsi disesuaikan \u2248 ${plan.portionPct}% dari porsi standar untuk memenuhi target kalori.`
+      : ` \u00b7 Portions adjusted to \u2248 ${plan.portionPct}% of standard to meet the calorie target.`;
+    html += pNote;
+  }
+  html += `</div>`;
+  meals.forEach(ml=>{
+    const li = ml.items.map(it=>`<li>${itemLabel(it, plan.factor)}</li>`).join('');
+    html += `<div class="meal"><h4>${labels[ml.key]} <span class="kcal">${ml.kcal} kkal</span></h4><ul>${li}</ul></div>`;
+  });
+  html += `<div class="notes-box" style="margin-top:6px"><b>i</b> ${m.gramNote}</div>`;
+  document.getElementById('dayContent').innerHTML = html;
+}
+
+function resetAll(){
+  document.querySelectorAll('input').forEach(el=>{ if(el.type==='radio'){el.checked=(el.value==='M'||el.value==='maintain');} else el.value=''; });
+  document.querySelectorAll('textarea').forEach(el=>el.value='');
+  document.getElementById('activity').value='1.55';
+  Object.keys(diseases).forEach(k=>diseases[k]=false);
+  document.querySelectorAll('.toggle').forEach(el=>el.classList.remove('on'));
+  ['resultCard','needsCard','planCard','interactionCard','exerciseCard','elderlyMenuNote'].forEach(id=>{var e=document.getElementById(id); if(e) e.classList.add('hidden');});
+  document.getElementById('errMsg').classList.add('hidden');
+  lastResult=null;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ============================================================
+   EXPORT: render full report to a canvas, then JPEG / PDF (offline)
+============================================================ */
+const _measureCanvas = (typeof document!=='undefined') ? document.createElement('canvas') : null;
+const _mctx = _measureCanvas ? _measureCanvas.getContext('2d') : null;
+
+function renderReportCanvas(r){
+  const m = t();
+  // iOS Safari has canvas size limits and lower memory; use a smaller multiplier there.
+  const isIOS = /iP(hone|ad|od)/.test(navigator.platform||'') || (/Mac/.test(navigator.platform||'') && navigator.maxTouchPoints>1) || /iPhone|iPad|iPod/.test(navigator.userAgent||'');
+  const W = 840, PAD = 36, mult = isIOS ? 1.4 : 2;
+  // layout function; if ctx null -> measuring only
+  function layout(ctx){
+    let y = 0;
+    let curFont = '';
+    function setFont(spec){ curFont = spec; if(_mctx) _mctx.font = spec; if(ctx) ctx.font = spec; }
+    function tw(s){ if(_mctx){_mctx.font=curFont;} return _mctx?_mctx.measureText(s).width:0; }
+    function fill(c){ if(ctx) ctx.fillStyle=c; }
+    function rect(x,yy,w,h,c){ if(ctx){ctx.fillStyle=c; ctx.fillRect(x,yy,w,h);} }
+    function rrect(x,yy,w,h,rad,c){ if(ctx){ctx.fillStyle=c; ctx.beginPath(); ctx.moveTo(x+rad,yy); ctx.arcTo(x+w,yy,x+w,yy+h,rad); ctx.arcTo(x+w,yy+h,x,yy+h,rad); ctx.arcTo(x,yy+h,x,yy,rad); ctx.arcTo(x,yy,x+w,yy,rad); ctx.closePath(); ctx.fill();} }
+    function txt(s,x,yy,c,align){ if(ctx){ctx.fillStyle=c||'#1a1a1a'; ctx.textAlign=align||'left'; ctx.textBaseline='alphabetic'; ctx.fillText(s,x,yy);} }
+    function wrap(s,x,yy,maxW,lh,c){
+      const words=String(s).split(' '); let line=''; let cy=yy;
+      for(let i=0;i<words.length;i++){
+        const test=line?line+' '+words[i]:words[i];
+        if(tw(test)>maxW && line){ txt(line,x,cy,c); line=words[i]; cy+=lh; }
+        else line=test;
+      }
+      if(line){ txt(line,x,cy,c); cy+=lh; }
+      return cy;
+    }
+    // ---- HEADER ----
+    rect(0,0,W,90,'#143f33');
+    setFont('700 22px Arial'); txt(m.reportTitle, PAD, 40, '#ffffff');
+    setFont('400 13px Arial'); txt('WHO Asia-Pasifik \u00b7 Harris-Benedict', PAD, 62, '#cfe3da');
+    const today = new Date().toLocaleDateString(LANG==='id'?'id-ID':'en-US',{year:'numeric',month:'long',day:'numeric'});
+    setFont('400 12px Arial'); txt(m.reportDate+': '+today, W-PAD, 40, '#cfe3da', 'right');
+    y = 90 + 24;
+
+    // ---- PATIENT ----
+    setFont('700 16px Arial'); txt(m.pPatient, PAD, y, '#1f3864'); y+=8;
+    rect(PAD,y,W-2*PAD,2,'#2e75b6'); y+=18;
+    setFont('400 13px Arial');
+    const sexTxt = r.sex==='M'?m.lMale:m.lFemale;
+    const rows = [
+      [m.pName, r.name||'-', m.pPhone, r.phone||'-'],
+      [m.pAge, r.age+' '+m.yr, m.pSex, sexTxt],
+      [m.pH, r.height+' cm', m.pW, r.weight+' kg'],
+      [m.pWaist, r.waist+' cm', m.lActivity, String(r.activity)]
+    ];
+    rows.forEach(rw=>{
+      setFont('700 13px Arial'); txt(rw[0]+':', PAD, y, '#143f33');
+      setFont('400 13px Arial'); txt(rw[1], PAD+120, y, '#1a1a1a');
+      setFont('700 13px Arial'); txt(rw[2]+':', PAD+380, y, '#143f33');
+      setFont('400 13px Arial'); txt(rw[3], PAD+500, y, '#1a1a1a');
+      y+=22;
+    });
+    y+=12;
+
+    // ---- BMI ----
+    const colors = {under:'#b8893b',normal:'#1f5d4c',over:'#b8893b',ob1:'#d35400',ob2:'#c0392b'};
+    rrect(PAD,y,W-2*PAD,64,10,'#e7f1ec');
+    setFont('700 28px Arial'); txt(r.bmi.toFixed(1)+' kg/m\u00b2', PAD+20, y+40, colors[r.catKey]);
+    setFont('700 16px Arial'); txt(m.mBMI+': '+r.catName, PAD+220, y+30, '#143f33');
+    setFont('400 12px Arial'); txt('BBI '+r.bbi+' kg'+(r.abw?(' \u00b7 ABW '+r.abw+' kg'):'')+' \u00b7 BMR '+r.bmr+' \u00b7 TDEE '+r.tdee, PAD+220, y+50, '#6b7d77');
+    y+=80;
+
+    // ---- CENTRAL OBESITY ----
+    if(r.central){
+      rrect(PAD,y,W-2*PAD,46,10,'#c0392b');
+      setFont('800 18px Arial'); txt('\u26a0 '+m.central, W/2, y+22, '#ffffff', 'center');
+      setFont('400 12px Arial'); txt(m.centralSub+' (> '+r.centralCut+' cm)', W/2, y+38, '#ffe8e5', 'center');
+      y+=60;
+    }
+
+    // ---- DAILY NEEDS ----
+    setFont('700 16px Arial'); txt(m.rNeeds, PAD, y, '#1f3864'); y+=8;
+    rect(PAD,y,W-2*PAD,2,'#2e75b6'); y+=16;
+    setFont('400 12px Arial');
+    txt((LANG==='id'?'Tujuan: ':'Goal: ')+m[r.goalKey], PAD, y, '#6b7d77'); y+=18;
+    const macros=[[m.cal,r.energy+' kkal','#143f33'],[m.pro,r.proteinG+' g','#2e6f5e'],[m.fat,r.fatG+' g','#b8893b'],[m.carb,r.carbG+' g','#5b8a3c']];
+    const mw=(W-2*PAD-30)/4;
+    macros.forEach((mac,i)=>{
+      const x=PAD+i*(mw+10);
+      rrect(x,y,mw,54,8,mac[2]);
+      setFont('800 18px Arial'); txt(mac[1], x+mw/2, y+26, '#ffffff','center');
+      setFont('400 11px Arial'); txt(mac[0], x+mw/2, y+44, '#eaf3ef','center');
+    });
+    y+=70;
+
+    // ---- ADJUSTMENTS ----
+    const adjNotes = adjustNotesArray(r);
+    // free build: when the fat-loss goal is gated (no menu built) this section is
+    // covered by the notice on screen, so it is omitted from the export as well.
+    if(r._plans && adjNotes.length){
+      setFont('700 15px Arial'); txt(m.rAdjust, PAD, y, '#1f3864'); y+=8;
+      rect(PAD,y,W-2*PAD,2,'#b8893b'); y+=16;
+      setFont('400 12px Arial');
+      adjNotes.forEach(note=>{
+        txt('\u2022', PAD, y, '#b8893b');
+        y = wrap(note, PAD+16, y, W-2*PAD-16, 17, '#1a1a1a')+6;
+      });
+      y+=8;
+    }
+
+    // ---- DRUG INTERACTIONS ----
+    if(r._plans && r.interactions && r.interactions.length){
+      setFont('700 15px Arial'); txt(m.rIx, PAD, y, '#1f3864'); y+=8;
+      rect(PAD,y,W-2*PAD,2,'#c0392b'); y+=16;
+      const sevC={info:'#2e75b6',caution:'#b8893b',serious:'#c0392b'};
+      const sevL={info:m.sevInfo,caution:m.sevCaution,serious:m.sevSerious};
+      const order={serious:0,caution:1,info:2};
+      const sorted=[...r.interactions].sort((a,b)=>order[a.sev]-order[b.sev]);
+      sorted.forEach(ix=>{
+        const txtv=LANG==='id'?ix.id:ix.en;
+        setFont('700 11px Arial'); txt('['+sevL[ix.sev].toUpperCase()+']', PAD, y, sevC[ix.sev]);
+        const indent=PAD+tw('['+sevL[ix.sev].toUpperCase()+'] ');
+        setFont('400 12px Arial');
+        y = wrap(txtv, indent, y, W-PAD-indent, 17, '#1a1a1a')+8;
+      });
+      y+=6;
+    }
+
+    // ---- WEEK MENU (free build: not generated for the fat-loss goal) ----
+    if(!r._plans){
+      setFont('700 16px Arial'); txt(m.rMenu, PAD, y, '#1f3864'); y+=8;
+      rect(PAD,y,W-2*PAD,2,'#1f5d4c'); y+=18;
+      var nbH = 168;
+      rrect(PAD,y,W-2*PAD,nbH,10,'#c62828');
+      setFont('700 13px Arial');
+      var plainNotice = (m.freeNotice||'').replace(/<[^>]+>/g,'');
+      wrap(plainNotice, PAD+18, y+26, W-2*PAD-36, 19, '#ffffff');
+      y += nbH + 16;
+    } else {
+      setFont('700 16px Arial'); txt(m.rMenu, PAD, y, '#1f3864'); y+=8;
+      rect(PAD,y,W-2*PAD,2,'#1f5d4c'); y+=18;
+      const labels={breakfast:m.breakfast,lunch:m.lunch,dinner:m.dinner,snack:m.snack};
+      for(let d=0; d<7; d++){
+        const plan=r._plans[d];
+        const meals=plan.meals;
+        let tk=0,tp=0,tf=0,tc=0; meals.forEach(ml=>{tk+=ml.kcal;tp+=ml.p;tf+=ml.f;tc+=ml.c;});
+        // day header
+        rrect(PAD,y,W-2*PAD,26,6,'#e7f1ec');
+        setFont('700 13px Arial'); txt(m.days[d], PAD+12, y+18, '#143f33');
+        setFont('400 11px Arial'); txt(tk+' kkal \u00b7 P '+tp+' \u00b7 L '+tf+' \u00b7 K '+tc+' g', W-PAD-12, y+18, '#6b7d77','right');
+        y+=34;
+        meals.forEach(ml=>{
+          setFont('700 12px Arial'); txt(labels[ml.key], PAD+8, y, '#2e75b6');
+          setFont('400 11px Arial'); txt(ml.kcal+' kkal', W-PAD-8, y, '#6b7d77','right');
+          y+=15;
+          setFont('400 12px Arial');
+          const items = ml.items.map(it=>itemLabel(it, plan.factor)).join('; ');
+          y = wrap(items, PAD+18, y, W-2*PAD-26, 16, '#1a1a1a')+5;
+        });
+        y+=10;
+      }
+    }
+
+    // ---- EXERCISE PLAN ----
+    if(r._exPlan){
+      const ep = r._exPlan;
+      y+=6;
+      setFont('700 16px Arial'); txt(m.exTitle, PAD, y, '#1f3864'); y+=8;
+      rect(PAD,y,W-2*PAD,2,'#b8893b'); y+=18;
+      // energy balance summary
+      const loss=(r.goalMode==='loss')||r.recomp;
+      const totalOut=r.tdee+ep.dailyAvgKcal; const net=r.energy-totalOut;
+      setFont('400 12px Arial');
+      const ebLines=[
+        m.ebBMR+': '+r.bmr+' '+m.kcalDay,
+        m.ebTDEE+': '+r.tdee+' '+m.kcalDay,
+        m.ebIntake+': '+r.energy+' '+m.kcalDay,
+        m.ebExercise+': +'+ep.dailyAvgKcal+' '+m.kcalDay,
+        m.ebTotalOut+': '+totalOut+' '+m.kcalDay,
+        m.ebNet+': '+(net>0?'+':'')+net+' '+m.kcalDay
+      ];
+      rrect(PAD,y,W-2*PAD, ebLines.length*16+12, 6, '#f6edda'); 
+      let ey=y+18;
+      ebLines.forEach(ln=>{ setFont('400 12px Arial'); txt(ln, PAD+12, ey, '#7a5a1e'); ey+=16; });
+      y=ey+8;
+      // exercise rows grouped
+      const groups=[['aerobic',m.exAerobic],['strength',m.exStrength],['balance',m.exBalance],['flexibility',m.exFlexibility]];
+      groups.forEach(g=>{
+        const rows=ep.rows.filter(x=>x.type===g[0]);
+        if(!rows.length) return;
+        const freq=g[0]==='aerobic'?(ep.aerobicDaysPerWeek+' '+m.exDaysWk):g[0]==='strength'?(ep.strengthDays+' '+m.exDaysWk):g[0]==='flexibility'?(m.exDaily||'setiap hari'):('3 '+m.exDaysWk);
+        setFont('700 13px Arial'); txt(g[1]+' \u2014 '+freq, PAD, y, '#1f5d4c'); y+=18;
+        rows.forEach(row=>{
+          const nm=(LANG==='id')?row.ex.n_id:row.ex.n_en;
+          const metTxt=row.ex.kcalMin?(row.ex.kcalMin+' '+m.exKcalMin):('MET '+row.ex.met);
+          setFont('400 12px Arial');
+          y=wrap(nm+'  ('+metTxt+', '+row.minutes+' '+m.exMin+')', PAD+14, y, W-2*PAD-120, 16, '#1a1a1a');
+          setFont('700 12px Arial'); txt(row.kcal+' kkal', W-PAD-8, y-16, '#1f5d4c','right');
+          y+=4;
+        });
+        y+=8;
+      });
+      // safety note
+      const noteParts=[];
+      if(ep.safe.cvHigh) noteParts.push(m.exNoteCV);
+      if(ep.safe.htn) noteParts.push(m.exNoteHTN);
+      if(ep.safe.renal) noteParts.push(m.exNoteRenal);
+      if(ep.safe.hypoG) noteParts.push(m.exNoteHypoG);
+      if(ep.safe.dm) noteParts.push(m.exNoteDM);
+      if(ep.safe.elderly) noteParts.push(m.exNoteElderly);
+      noteParts.push(m.exNoteGeneral);
+      setFont('400 11px Arial');
+      y=wrap(noteParts.join(' '), PAD, y, W-2*PAD, 15, '#7a5a1e')+8;
+    }
+
+    // ---- DISCLAIMER ----
+    y+=4;
+    rrect(PAD,y,W-2*PAD,1,0,'#d8d2c4'); y+=14;
+    setFont('400 11px Arial');
+    const disc = LANG==='id'
+      ? "Penyusun menu ini hanya untuk membantu mempermudah pemilihan menu bagi awam dan bukan pengganti penilaian serta saran profesional."
+      : "This menu planner is only an aid to make food selection easier for the layperson and is not a substitute for professional judgment and advice.";
+    y = wrap(disc, PAD, y, W-2*PAD, 15, '#1a1a1a')+4;
+    const warn = LANG==='id'
+      ? "PERHATIAN: pada penderita penyakit tertentu serta meminum obat-obat rutin tertentu tetap wajib konsultasi ke dokter keluarga dan atau dokter spesialis Gizi Klinik."
+      : "ATTENTION: patients with certain conditions and those taking certain routine medications must still consult a family physician and/or a Clinical Nutrition specialist.";
+    setFont('700 11px Arial');
+    y = wrap(warn, PAD, y, W-2*PAD, 15, '#c0392b')+10;
+    setFont('700 12px Arial'); txt('Dr.dr.Tirta Darmawan Susanto, MKes', W/2, y, '#1f5d4c','center'); y+=15;
+    setFont('400 10px Arial'); txt('HP/WA 08156074978  \u00b7  IG tirta_susanto  \u00b7  TikTok tirta.d.susanto', W/2, y, '#6b7d77','center');
+    y+=20;
+    return y;
+  }
+
+  // pass 1: measure
+  const h = layout(null) + PAD;
+  // iOS/Safari cap total canvas pixels to avoid blank exports; shrink multiplier to fit.
+  const MAX_SIDE = isIOS ? 4000 : 32000;
+  let useMult = mult;
+  if(h*useMult > MAX_SIDE) useMult = MAX_SIDE / h;
+  if(W*useMult > MAX_SIDE) useMult = Math.min(useMult, MAX_SIDE / W);
+  // create canvas
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(W*useMult);
+  canvas.height = Math.round(h*useMult);
+  const ctx = canvas.getContext('2d');
+  ctx.scale(useMult,useMult);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,W,h);
+  // light watermark tiled
+  ctx.save();
+  ctx.globalAlpha = 1;
+  for(let wy=50; wy<h; wy+=170){
+    for(let wx=-40; wx<W; wx+=320){
+      ctx.save(); ctx.translate(wx+160,wy); ctx.rotate(-Math.PI/9);
+      ctx.fillStyle='rgba(31,93,76,0.06)'; ctx.textAlign='center';
+      ctx.font='700 14px Arial'; ctx.fillText('Dr.dr.Tirta Darmawan Susanto, MKes',0,-8);
+      ctx.font='600 9px Arial'; ctx.fillText('HP/WA 08156074978 · IG tirta_susanto · TikTok tirta.d.susanto',0,8);
+      ctx.restore();
+    }
+  }
+  ctx.restore();
+  layout(ctx);
+  return canvas;
+}
+
+// adjustment notes as plain array (reuse logic from buildAdjustNotes but return array)
+function adjustNotesArray(r){
+  const tmp = buildAdjustNotes(r); // returns HTML
+  // extract <li> text
+  const lis = [...tmp.matchAll(/<li>(.*?)<\/li>/g)].map(x=>x[1]);
+  return lis;
+}
+
+function isIOSDevice(){
+  return /iP(hone|ad|od)/.test(navigator.platform||'') ||
+         (/Mac/.test(navigator.platform||'') && navigator.maxTouchPoints>1) ||
+         /iPhone|iPad|iPod/.test(navigator.userAgent||'');
+}
+
+// Deliver a file: try Web Share (best on iOS), then download attribute, then open in new tab.
+function deliverFile(blob, filename, mime){
+  // 1) Web Share API with files (iOS 15+ Safari) — opens the share sheet so user can Save to Files/Photos
+  try{
+    if(navigator.canShare){
+      const file = new File([blob], filename, {type:mime});
+      if(navigator.canShare({files:[file]})){
+        navigator.share({files:[file], title:filename}).catch(function(){ fallbackOpen(blob, filename); });
+        return;
+      }
+    }
+  }catch(e){}
+  // 2) Standard download (works on desktop & Android)
+  try{
+    const a = document.createElement('a');
+    if('download' in a){
+      const url = URL.createObjectURL(blob);
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
+      return;
+    }
+  }catch(e){}
+  // 3) Fallback: open in new tab so user can long-press/Share to save
+  fallbackOpen(blob, filename);
+}
+
+function fallbackOpen(blob, filename){
+  try{
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, '_blank');
+    if(!w){ // popup blocked — navigate current tab
+      location.href = url;
+    }
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);
+  }catch(e){
+    alert(LANG==='id'?'Tidak dapat menyimpan berkas pada perangkat ini.':'Could not save the file on this device.');
+  }
+}
+
+function safeName(){
+  const n=(lastResult&&lastResult.name)?lastResult.name.replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'_'):'Pasien';
+  return n||'Pasien';
+}
+
+function canvasToBlob(canvas, mime, quality){
+  return new Promise(function(resolve){
+    if(canvas.toBlob){
+      canvas.toBlob(function(b){
+        if(b) resolve(b);
+        else resolve(dataURLtoBlob(canvas.toDataURL(mime, quality)));
+      }, mime, quality);
+    } else {
+      resolve(dataURLtoBlob(canvas.toDataURL(mime, quality)));
+    }
+  });
+}
+
+function dataURLtoBlob(durl){
+  const parts = durl.split(',');
+  const mime = (parts[0].match(/:(.*?);/)||[])[1] || 'image/jpeg';
+  const bin = atob(parts[1]);
+  const arr = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+  return new Blob([arr], {type:mime});
+}
+
+function downloadJPEG(){
+  if(!lastResult){ return; }
+  try{
+    const canvas = renderReportCanvas(lastResult);
+    canvasToBlob(canvas, 'image/jpeg', 0.92).then(function(blob){
+      deliverFile(blob, 'Laporan_Gizi_'+safeName()+'.jpg', 'image/jpeg');
+    });
+  }catch(e){
+    alert((LANG==='id'?'Gagal membuat JPEG: ':'Failed to create JPEG: ')+(e&&e.message?e.message:e));
+  }
+}
+
+function downloadPDF(){
+  if(!lastResult){ return; }
+  try{
+    const canvas = renderReportCanvas(lastResult);
+    const W = canvas.width;
+    const pageHpx = Math.round(W*841.89/595.28); // A4 ratio
+    const pages = [];
+    for(let yy=0; yy<canvas.height; yy+=pageHpx){
+      const hh = Math.min(pageHpx, canvas.height-yy);
+      const c = document.createElement('canvas');
+      c.width = W; c.height = pageHpx;
+      const cx = c.getContext('2d');
+      cx.fillStyle='#ffffff'; cx.fillRect(0,0,W,pageHpx);
+      cx.drawImage(canvas, 0,yy,W,hh, 0,0,W,hh);
+      const durl = c.toDataURL('image/jpeg',0.92);
+      const b64 = durl.split(',')[1];
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+      pages.push({bytes, w:W, h:pageHpx});
+    }
+    const pdfBytes = buildPDF(pages);
+    deliverFile(new Blob([pdfBytes],{type:'application/pdf'}), 'Laporan_Gizi_'+safeName()+'.pdf', 'application/pdf');
+  }catch(e){
+    alert((LANG==='id'?'Gagal membuat PDF: ':'Failed to create PDF: ')+(e&&e.message?e.message:e));
+  }
+}
+
+// Minimal PDF builder: one A4 page per JPEG image (DCTDecode), no external library
+function buildPDF(pages){
+  const pageW=595.28, pageH=841.89;
+  const enc = s => { const a=new Uint8Array(s.length); for(let i=0;i<s.length;i++) a[i]=s.charCodeAt(i)&0xff; return a; };
+  const N = pages.length;
+  // object numbers: 1 Catalog, 2 Pages, then per page (page, img, content)
+  const perPage=[]; let num=3;
+  const pageNums=[];
+  for(let i=0;i<N;i++){ const o={page:num++,img:num++,content:num++}; perPage.push(o); pageNums.push(o.page); }
+  const totalObjs = 2 + N*3;
+  const objBytes = {};
+  objBytes[1]=enc(`1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n`);
+  objBytes[2]=enc(`2 0 obj\n<< /Type /Pages /Kids [${pageNums.map(n=>n+' 0 R').join(' ')}] /Count ${N} >>\nendobj\n`);
+  for(let i=0;i<N;i++){
+    const o=perPage[i], p=pages[i];
+    objBytes[o.page]=enc(`${o.page} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /XObject << /Im0 ${o.img} 0 R >> >> /Contents ${o.content} 0 R >>\nendobj\n`);
+    const content=`q\n${pageW} 0 0 ${pageH} 0 0 cm\n/Im0 Do\nQ\n`;
+    objBytes[o.content]=enc(`${o.content} 0 obj\n<< /Length ${content.length} >>\nstream\n${content}endstream\nendobj\n`);
+    const head=enc(`${o.img} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${p.w} /Height ${p.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${p.bytes.length} >>\nstream\n`);
+    const foot=enc(`\nendstream\nendobj\n`);
+    const comb=new Uint8Array(head.length+p.bytes.length+foot.length);
+    comb.set(head,0); comb.set(p.bytes,head.length); comb.set(foot,head.length+p.bytes.length);
+    objBytes[o.img]=comb;
+  }
+  const header=new Uint8Array([0x25,0x50,0x44,0x46,0x2d,0x31,0x2e,0x34,0x0a,0x25,0xe2,0xe3,0xcf,0xd3,0x0a]); // %PDF-1.4 + binary comment
+  let parts=[header]; let offset=header.length;
+  const xref=new Array(totalObjs+1);
+  for(let n=1;n<=totalObjs;n++){ xref[n]=offset; parts.push(objBytes[n]); offset+=objBytes[n].length; }
+  let xs=`xref\n0 ${totalObjs+1}\n0000000000 65535 f \n`;
+  for(let n=1;n<=totalObjs;n++){ xs+=String(xref[n]).padStart(10,'0')+' 00000 n \n'; }
+  xs+=`trailer\n<< /Size ${totalObjs+1} /Root 1 0 R >>\nstartxref\n${offset}\n%%EOF`;
+  parts.push(enc(xs));
+  let total=parts.reduce((a,b)=>a+b.length,0);
+  const out=new Uint8Array(total); let pos=0;
+  parts.forEach(p=>{ out.set(p,pos); pos+=p.length; });
+  return out;
+}
+
+// Verified references compiled from the two source books (DOIs confirmed in book text).
+const REFERENCES = [
+  // ---- Clinical foundations (Panduan Klinis Gizi) ----
+  {a:"Mahan LK, Raymond JL, editors.", t:"Krause's Food & the Nutrition Care Process. 14th ed.", s:"St. Louis: Elsevier; 2017.", u:"https://www.elsevier.com/books/krauses-food-and-the-nutrition-care-process/mahan/978-0-323-34075-5"},
+  {a:"World Health Organization Regional Office for the Western Pacific.", t:"The Asia-Pacific perspective: redefining obesity and its treatment.", s:"Sydney: Health Communications Australia; 2000.", u:"https://iris.who.int/handle/10665/206936"},
+  {a:"Pavlidou E, Papadopoulou SK, Seroglou K, Giaginis C.", t:"Revised Harris-Benedict Equation: New Human Resting Metabolic Rate Equation.", s:"Metabolites. 2023;13(2):189.", u:"https://doi.org/10.3390/metabo13020189"},
+  {a:"Evert AB, Dennison M, Gardner CD, Garvey WT, Lau KHK, MacLeod J, et al.", t:"Nutrition Therapy for Adults With Diabetes or Prediabetes: A Consensus Report.", s:"Diabetes Care. 2019;42(5):731-754.", u:"https://doi.org/10.2337/dci19-0014"},
+  {a:"Serón-Arbeloa C, Labarta-Monzón L, Puzo-Foncillas J, Mallor-Bonet T, Lafita-López A, Bueno-Vidales N, et al.", t:"Malnutrition Screening and Assessment.", s:"Nutrients. 2022;14(12):2392.", u:"https://doi.org/10.3390/nu14122392"},
+  {a:"Mueller CM, editor.", t:"The ASPEN Adult Nutrition Support Core Curriculum. 3rd ed.", s:"Silver Spring: ASPEN; 2017.", u:"https://www.nutritioncare.org/Guidelines_and_Clinical_Resources/"},
+  {a:"Salmón-Gómez L, Catalán V, Frühbeck G, Gómez-Ambrosi J.", t:"Relevance of body composition in phenotyping the obesities.", s:"Rev Endocr Metab Disord. 2023;24(5):809-823.", u:"https://doi.org/10.1007/s11154-023-09796-3"},
+  {a:"Thibault R, Abbasoglu O, Ioannou E, Meija L, Ottens-Oussoren K, Pichard C, et al.", t:"ESPEN guideline on hospital nutrition.", s:"Clin Nutr. 2021;40(12):5684-5709.", u:"https://doi.org/10.1016/j.clnu.2021.09.039"},
+  {a:"Singer P, Blaser AR, Berger MM, Calder PC, Casaer M, Hiesmayr M, et al.", t:"ESPEN practical and partially revised guideline: Clinical nutrition in the intensive care unit.", s:"Clin Nutr. 2023;42(9):1671-1689.", u:"https://doi.org/10.1016/j.clnu.2023.07.011"},
+  {a:"Cederholm T, Jensen GL, Correia MITD, Gonzalez MC, Fukushima R, Higashiguchi T, et al.", t:"GLIM criteria for the diagnosis of malnutrition - A consensus report from the global clinical nutrition community.", s:"Clin Nutr. 2019;38(1):1-9.", u:"https://doi.org/10.1016/j.clnu.2018.08.002"},
+  {a:"Cortés-Aguilar R, Malih N, Abbate M, Fresneda S, Yañez A, Bennasar-Veny M.", t:"Validity of nutrition screening tools for risk of malnutrition among hospitalized adult patients: A systematic review and meta-analysis.", s:"Clin Nutr. 2024;43(5):1094-1116.", u:"https://doi.org/10.1016/j.clnu.2024.03.008"},
+  {a:"Dent E, Hoogendijk EO, Visvanathan R, Wright ORL.", t:"Malnutrition Screening and Assessment in Hospitalised Older People: a Review.", s:"J Nutr Health Aging. 2019;23(5):431-441.", u:"https://doi.org/10.1007/s12603-019-1176-z"},
+  {a:"Amaro-Gahete FJ, Jurado-Fasoli L, De-la-O A, Gutiérrez Á, Castillo MJ, Ruiz JR.", t:"Accuracy and Validity of Resting Energy Expenditure Predictive Equations in Middle-Aged Adults.", s:"Nutrients. 2018;10(11):1635.", u:"https://doi.org/10.3390/nu10111635"},
+  {a:"Arends J, Bachmann P, Baracos V, Barthelemy N, Bertz H, Bozzetti F, et al.", t:"ESPEN guidelines on nutrition in cancer patients.", s:"Clin Nutr. 2017;36(1):11-48.", u:"https://doi.org/10.1016/j.clnu.2016.07.015"},
+  {a:"Tobias DK, Chen M, Manson JE, Ludwig DS, Willett W, Hu FB.", t:"Effect of low-fat diet interventions versus other diet interventions on long-term weight change in adults: a systematic review and meta-analysis.", s:"BMJ / Lancet Diabetes Endocrinol. 2015;3(12):968-979.", u:"https://doi.org/10.1016/S2213-8587(15)00367-8"},
+  {a:"Zhong P, Tan S, Zhu Z, Zhu Z, Liang Y, Huang W, et al.", t:"Normal-weight central obesity and risk of cardiovascular and microvascular events in adults with prediabetes or diabetes: Chinese and British cohorts.", s:"Diabetes Metab Res Rev. 2023;39(8):e3707.", u:"https://doi.org/10.1002/dmrr.3707"},
+  {a:"Sureka B, George T, Garg MK, Banerjee M, Deora S, Sukhla R, et al.", t:"Cutoff values of body fat composition to predict metabolic risk factors with normal waist circumference in Asian Indian population.", s:"Eur Radiol. 2023;33(1):711-719.", u:"https://doi.org/10.1007/s00330-022-09009-6"},
+  {a:"Volkert D, Beck AM, Cederholm T, Cruz-Jentoft A, Goisser S, Hooper L, et al.", t:"ESPEN guideline on clinical nutrition and hydration in geriatrics.", s:"Clin Nutr. 2019;38(1):10-47.", u:"https://doi.org/10.1016/j.clnu.2018.05.024"},
+  {a:"Berger MM, Shenkin A, Schweinlin A, Amrein K, Augsburger M, Biesalski HK, et al.", t:"ESPEN micronutrient guideline.", s:"Clin Nutr. 2022;41(6):1357-1424.", u:"https://doi.org/10.1016/j.clnu.2022.02.015"},
+  {a:"da Silva JSV, Seres DS, Sabino K, Adams SC, Berdahl GJ, Citty SW, et al.", t:"ASPEN Consensus Recommendations for Refeeding Syndrome.", s:"Nutr Clin Pract. 2020;35(2):178-195.", u:"https://doi.org/10.1002/ncp.10474"},
+  {a:"Friedli N, Stanga Z, Culkin A, Crook M, Laviano A, Sobotka L, et al.", t:"Management and prevention of refeeding syndrome in medical inpatients: An evidence-based and consensus-supported algorithm.", s:"Nutrition. 2018;47:13-20.", u:"https://doi.org/10.1016/j.nut.2017.09.007"},
+  // ---- Food composition & Indonesian exchange data (Buku Bahan Makanan Pengganti) ----
+  {a:"Kementerian Kesehatan RI.", t:"Tabel Komposisi Pangan Indonesia (TKPI) 2017.", s:"Jakarta: Direktorat Gizi Masyarakat, Kemenkes RI; 2017.", u:"https://www.persagi.org/emagz/Tabel_Komposisi_Pangan_Indonesia_2017.pdf"},
+  {a:"Kementerian Kesehatan RI, Direktorat Bina Gizi.", t:"Daftar Bahan Makanan Penukar.", s:"Jakarta: Kementerian Kesehatan RI; 2014.", u:""},
+  {a:"John OD, Surugau N, Kansedo J, Panchal SK, Brown L.", t:"Plant-Based Functional Foods from Borneo.", s:"Nutrients. 2025;17(2):200.", u:"https://doi.org/10.3390/nu17020200"},
+  {a:"Kumoro AC, Alhanif M, Wardhani DH.", t:"A Critical Review on Tropical Fruits Seeds as Prospective Sources of Nutritional and Bioactive Compounds for Functional Foods Development: A Case of Indonesian Exotic Fruits.", s:"Int J Food Sci. 2020;2020:4051475.", u:"https://doi.org/10.1155/2020/4051475"},
+  {a:"Chen YC, Tao NL, Hu SY, Tsai HY, Liao SC, Tsai WL, et al.", t:"Effect of Tempeh on Gut Microbiota and Anti-Stress Activity in Zebrafish.", s:"Int J Mol Sci. 2021;22(23):12660.", u:"https://doi.org/10.3390/ijms222312660"},
+  {a:"Sokhela H, Govender L, Siwela M.", t:"Complementary Feeding Practices and Childhood Malnutrition in South Africa: The Potential of Moringa oleifera Leaf Powder as a Fortificant: A Narrative Review.", s:"Nutrients. 2023;15(8):2011.", u:"https://doi.org/10.3390/nu15082011"},
+  {a:"Lopez-Rodriguez NA, Gaytán-Martínez M, de la Luz Reyes-Vega M, Loarca-Piña G.", t:"Glucosinolates and Isothiocyanates from Moringa oleifera: Chemical and Biological Approaches.", s:"Plant Foods Hum Nutr. 2020;75(4):447-457.", u:"https://doi.org/10.1007/s11130-020-00851-x"},
+  {a:"Fernández Cruz E, López Plaza B, Santurino C, Gómez Candela C.", t:"Nutritional composition and nutritional claims of Canary Islands banana.", s:"Nutr Hosp. 2021;38(6):1248-1256.", u:"https://doi.org/10.20960/nh.03614"},
+  {a:"Chandrika UG, Prasad Kumarab PAAS.", t:"Gotu Kola (Centella asiatica): Nutritional Properties and Plausible Health Benefits.", s:"Adv Food Nutr Res. 2015;76:125-157.", u:"https://doi.org/10.1016/bs.afnr.2015.08.001"},
+  {a:"Saensouk P, Saensouk S, Sonthongphithak P, Chanthavongsa K, Jitpromma T.", t:"Exploring local vegetables cultivated in home gardens... ethnobotanical knowledge, nutritional value, and horticultural potential.", s:"J Ethnobiol Ethnomed. 2025;22(1):4.", u:"https://doi.org/10.1186/s13002-025-00841-w"},
+  {a:"Sari APZNL, Tribudi YA, Maulana YP, Ulfah M, Adli DN.", t:"Egg and meat quality attributes of Tukong, a rumpled chicken breed in Indonesia.", s:"Poult Sci. 2026;105(6):106730.", u:"https://doi.org/10.1016/j.psj.2026.106730"},
+  // ---- Source books authored ----
+  // ---- Physical exercise (Buku Latihan Fisik Sepanjang Usia) ----
+  {a:"Ainsworth BE, Haskell WL, Herrmann SD, Meckes N, Bassett DR Jr, Tudor-Locke C, et al.", t:"2011 Compendium of Physical Activities: a second update of codes and MET values.", s:"Med Sci Sports Exerc. 2011;43(8):1575-1581.", u:"https://doi.org/10.1249/MSS.0b013e31821ece12"},
+  {a:"Bull FC, Al-Ansari SS, Biddle S, Borodulin K, Buman MP, Cardon G, et al.", t:"World Health Organization 2020 guidelines on physical activity and sedentary behaviour.", s:"Br J Sports Med. 2020;54(24):1451-1462.", u:"https://doi.org/10.1136/bjsports-2020-102955"},
+  {a:"Ratamess NA, Alvar BA, Evetoch TK, Housh TJ, Kibler WB, Kraemer WJ, et al.", t:"American College of Sports Medicine position stand. Progression models in resistance training for healthy adults.", s:"Med Sci Sports Exerc. 2009;41(3):687-708.", u:"https://doi.org/10.1249/MSS.0b013e3181915670"},
+  {a:"Maillard F, Pereira B, Boisseau N.", t:"Effect of high-intensity interval training on total, abdominal and visceral fat mass: a meta-analysis.", s:"Sports Med. 2018;48(2):269-288.", u:"https://doi.org/10.1007/s40279-017-0807-y"},
+  {a:"Viana RB, Naves JPA, Coswig VS, de Lira CAB, Steele J, Fisher JP, et al.", t:"Is interval training the magic bullet for fat loss? A systematic review and meta-analysis comparing moderate-intensity continuous training with HIIT.", s:"Br J Sports Med. 2019;53(10):655-664.", u:"https://doi.org/10.1136/bjsports-2018-099928"},
+  {a:"Sherrington C, Fairhall NJ, Wallbank GK, Tiedemann A, Michaleff ZA, Howard K, et al.", t:"Exercise for preventing falls in older people living in the community.", s:"Cochrane Database Syst Rev. 2019;(1):CD012424.", u:"https://doi.org/10.1002/14651858.CD012424.pub2"},
+  {a:"Achten J, Jeukendrup AE.", t:"Optimizing fat oxidation through exercise and diet.", s:"Nutrition. 2004;20(7-8):716-727.", u:"https://doi.org/10.1016/j.nut.2004.04.005"},
+  {a:"Liguori G, et al., editors (American College of Sports Medicine).", t:"ACSM's Guidelines for Exercise Testing and Prescription. 11th ed.", s:"Philadelphia: Wolters Kluwer; 2021.", u:"https://www.wolterskluwer.com/en/solutions/ovid/acsms-guidelines-for-exercise-testing-and-prescription-3210"},
+  // ---- Glycemic index (verified international source) ----
+  {a:"Atkinson FS, Brand-Miller JC, Foster-Powell K, Buyken AE, Goletzke J.", t:"International tables of glycemic index and glycemic load values 2021: a systematic review.", s:"Am J Clin Nutr. 2021;114(5):1625-1632.", u:"https://doi.org/10.1093/ajcn/nqab233"},
+  // ---- Source books authored ----
+  // ---- Elderly / geriatric nutrition & movement (Buku Lansia) ----
+  {a:"Cruz-Jentoft AJ, Bahat G, Bauer J, Boirie Y, Bruy\u00e8re O, Cederholm T, et al.", t:"Sarcopenia: revised European consensus on definition and diagnosis (EWGSOP2).", s:"Age Ageing. 2019;48(1):16-31.", u:"https://doi.org/10.1093/ageing/afy169"},
+  {a:"Cox NJ, Ibrahim K, Sayer AA, Robinson SM, Roberts HC.", t:"Assessment and Treatment of the Anorexia of Aging: A Systematic Review.", s:"Nutrients. 2019;11(1):144.", u:"https://doi.org/10.3390/nu11010144"},
+  {a:"Fielding R, Maserejian N, Kaufman E, Keisler-Starkey K, Harrington N, Carver K, et al.", t:"Association of anorexia/appetite loss with malnutrition and mortality in older populations: A systematic literature review.", s:"J Cachexia Sarcopenia Muscle. 2023;14(2):706-729.", u:"https://doi.org/10.1002/jcsm.13186"},
+  {a:"Nijssen KMR, Mensink RP, Joris PJ.", t:"The Mediterranean-DASH Intervention for Neurodegenerative Delay (MIND) Diet for the Aging Brain: A Systematic Review.", s:"J Nutr. 2024;154(3):699-714.", u:"https://doi.org/10.1016/j.tjnut.2024.01.024"},
+  {a:"Devranis P, Vassilopoulou E, Tsironis V, Sotiriadis PM, Chourdakis M, Aivaliotis M, et al.", t:"Mediterranean Diet, Ketogenic Diet or MIND Diet for Aging Populations with Cognitive Decline: A Systematic Review.", s:"Life (Basel). 2023;13(1):173.", u:"https://doi.org/10.3390/life13010173"},
+  {a:"McEvoy CT, Jennings A, Steves CJ, Macgregor A, Spector T, Cassidy A.", t:"The association between the MIND diet and cognitive health in middle-aged and older adults: A systematic review.", s:"Ageing Res Rev. 2025;107:102743.", u:"https://doi.org/10.1016/j.arr.2025.102743"},
+  {a:"Pourmotabbed A, Talebi S, Mehrabani S, Babaei A, Khosroshahi RA, Bagheri R, et al.", t:"The association of ultra-processed food intake with neurodegenerative disorders: a systematic review and dose-response meta-analysis.", s:"Nutr Neurosci. 2024;28(1):73-86.", u:"https://doi.org/10.1080/1028415X.2024.2351320"},
+  {a:"Loong S, Barnes S, Gatto NM, Chowdhury S, Lassale C.", t:"Omega-3 Fatty Acids, Cognition, and Brain Volume in Older Adults.", s:"Brain Sci. 2023;13(9):1278.", u:"https://doi.org/10.3390/brainsci13091278"},
+  {a:"Koblinsky ND, Power KA, Middleton L, Ferland G, Anderson ND.", t:"The Role of the Gut Microbiome in Diet and Exercise Effects on Cognition: A Review of the Intervention Literature.", s:"J Gerontol A Biol Sci Med Sci. 2023;78(2):195-205.", u:"https://doi.org/10.1093/gerona/glac166"},
+  {a:"Rhee CM, Wang AY, Biruete A, Kistler B, Kovesdy CP, Zarantonello D, et al.", t:"Nutritional and Dietary Management of Chronic Kidney Disease Under Conservative and Preservative Kidney Care Without Dialysis.", s:"J Ren Nutr. 2023;33(6S):S56-S66.", u:"https://doi.org/10.1053/j.jrn.2023.06.010"},
+  {a:"Cannon I, Robinson-Barella A, McLellan G, Ramsay SE.", t:"From Drugs to Dry Mouth: A Systematic Review Exploring Oral and Psychological Health Conditions Associated with Dry Mouth in Older Adults with Polypharmacy.", s:"Drugs Aging. 2023;40(4):307-316.", u:"https://doi.org/10.1007/s40266-023-01017-5"},
+  // ---- Source books authored ----
+  {a:"Susanto TD.", t:"Panduan Klinis Gizi Sehat dan Sesuai Penyakit.", s:"(Buku sumber teori, perhitungan, dan penyusunan menu).", u:""},
+  {a:"Susanto TD.", t:"Panduan Bahan Makanan Pengganti di Indonesia (200 bahan, URT & nilai gizi terverifikasi).", s:"(Buku sumber basis data bahan makanan).", u:""},
+  {a:"Susanto TD.", t:"Panduan Latihan Fisik Sepanjang Usia.", s:"(Buku sumber jenis latihan fisik & nilai MET).", u:""},
+  {a:"Susanto TD.", t:"Panduan Keluarga: Ketika Orang Tua Susah Makan (Edisi Khusus Geriatri).", s:"(Buku sumber modifikasi makanan & strategi makan lansia).", u:""},
+  {a:"Susanto TD.", t:"Panduan Nutrisi Otak Lansia (Pengaturan Makan Lanjut Usia).", s:"(Buku sumber pola Diet MIND untuk kesehatan otak lansia).", u:""},
+  {a:"Susanto TD.", t:"Panduan Metode GERAK Lansia.", s:"(Buku sumber jenis latihan fisik & pilar gerak untuk lansia).", u:""}
+];
+
+
+function renderReferences(){
+  try{
+    const ol = document.getElementById('refList');
+    if(!ol) return;
+    ol.innerHTML = REFERENCES.map(function(r){
+      const link = r.u ? ' <a href="'+r.u+'" target="_blank" rel="noopener">'+r.u+'</a>' : '';
+      return '<li>'+r.a+' <i>'+r.t+'</i> '+r.s+link+'</li>';
+    }).join('');
+  }catch(e){}
+}
+
+/* ============================================================
+   EXERCISE DATABASE — MET values from the 2011 Compendium of
+   Physical Activities (Ainsworth BE, et al. Med Sci Sports Exerc.
+   2011;43(8):1575-81. PMID 21681120; DOI 10.1249/MSS.0b013e31821ece12),
+   as compiled in "Buku Panduan Latihan Fisik Sepanjang Usia".
+   Calorie burn = MET x body-weight(kg) x duration(hours).
+   Two entries (Zumba, Body Combat) use directly-measured kcal/min
+   from indexed studies (kcalMin), so they do not use MET x weight.
+============================================================ */
+const EXERCISES = [
+  // --- CARDIO / AEROBIC (Bab 3) ---
+  {n_id:"Jalan santai (±4,8 km/jam)", n_en:"Leisurely walking (~4.8 km/h)", met:3.3, cat:"cardio", impact:"low", tags:["beginner","lowImpact","aerobic"]},
+  {n_id:"Jalan cepat (±6,4 km/jam)", n_en:"Brisk walking (~6.4 km/h)", met:5.0, cat:"cardio", impact:"low", tags:["beginner","lowImpact","aerobic","fatburn"]},
+  {n_id:"Jalan menanjak / treadmill inklinasi", n_en:"Uphill walking / incline treadmill", met:6.0, cat:"cardio", impact:"low", tags:["lowImpact","aerobic","fatburn"]},
+  {n_id:"Jogging (kecepatan umum)", n_en:"Jogging (general)", met:7.0, cat:"cardio", impact:"high", tags:["aerobic","fatburn"]},
+  {n_id:"Lari 8 km/jam", n_en:"Running 8 km/h", met:8.3, cat:"cardio", impact:"high", tags:["aerobic","fatburn"]},
+  {n_id:"Lari 9,7 km/jam", n_en:"Running 9.7 km/h", met:9.8, cat:"cardio", impact:"high", tags:["aerobic","fatburn"]},
+  {n_id:"Bersepeda santai (<16 km/jam)", n_en:"Leisure cycling (<16 km/h)", met:4.0, cat:"cardio", impact:"low", tags:["beginner","lowImpact","aerobic"]},
+  {n_id:"Bersepeda sedang (16–19 km/jam)", n_en:"Moderate cycling (16–19 km/h)", met:8.0, cat:"cardio", impact:"low", tags:["lowImpact","aerobic","fatburn"]},
+  {n_id:"Berenang gaya bebas, sedang", n_en:"Freestyle swimming, moderate", met:8.3, cat:"cardio", impact:"low", tags:["lowImpact","aerobic","fatburn","jointFriendly"]},
+  {n_id:"Senam aerobik intensitas rendah", n_en:"Low-impact aerobic dance", met:5.0, cat:"cardio", impact:"low", tags:["beginner","lowImpact","aerobic"]},
+  {n_id:"Senam aerobik intensitas tinggi", n_en:"High-impact aerobic dance", met:7.3, cat:"cardio", impact:"high", tags:["aerobic","fatburn"]},
+  {n_id:"Menaiki tangga", n_en:"Stair climbing", met:8.8, cat:"cardio", impact:"high", tags:["aerobic","fatburn"]},
+  {n_id:"Lompat tali (sedang)", n_en:"Jump rope (moderate)", met:12.3, cat:"cardio", impact:"high", tags:["aerobic","fatburn","hiit"]},
+  // --- STRENGTH / HYPERTROPHY (Bab 4) ---
+  {n_id:"Latihan beban, intensitas sedang", n_en:"Weight training, moderate", met:3.5, cat:"strength", impact:"low", tags:["muscle","beginner"]},
+  {n_id:"Latihan beban, intensitas berat", n_en:"Weight training, vigorous", met:6.0, cat:"strength", impact:"low", tags:["muscle"]},
+  {n_id:"Latihan beban tubuh (push-up, squat, plank)", n_en:"Bodyweight training (push-up, squat, plank)", met:3.8, cat:"strength", impact:"low", tags:["muscle","beginner","home"]},
+  {n_id:"Latihan sirkuit dengan beban", n_en:"Circuit training with weights", met:5.0, cat:"strength", impact:"moderate", tags:["muscle","fatburn"]},
+  {n_id:"Kettlebell, sedang-berat", n_en:"Kettlebell, moderate-vigorous", met:6.5, cat:"strength", impact:"moderate", tags:["muscle","fatburn"]},
+  // --- ENDURANCE (Bab 7) ---
+  {n_id:"Latihan ketahanan otot (repetisi tinggi)", n_en:"Muscular endurance (high-rep)", met:4.0, cat:"endurance", impact:"low", tags:["muscle","beginner"]},
+  {n_id:"Latihan sirkuit ketahanan", n_en:"Endurance circuit training", met:6.0, cat:"endurance", impact:"moderate", tags:["muscle","fatburn","aerobic"]},
+  // --- BALANCE / LOW-INTENSITY (Bab 6) — safe for elderly/high-risk ---
+  {n_id:"Keseimbangan statis (berdiri satu kaki, tandem)", n_en:"Static balance (single-leg, tandem stance)", met:2.0, cat:"balance", impact:"low", tags:["balance","elderly","lowImpact","home","safe"]},
+  {n_id:"Tai Chi", n_en:"Tai Chi", met:3.8, cat:"balance", impact:"low", tags:["balance","elderly","lowImpact","safe"]},
+  {n_id:"Yoga", n_en:"Yoga", met:2.5, cat:"balance", impact:"low", tags:["balance","elderly","lowImpact","safe","home"]},
+  {n_id:"Keseimbangan dinamis (jalan tandem, fungsional)", n_en:"Dynamic balance (tandem gait, functional)", met:3.0, cat:"balance", impact:"low", tags:["balance","elderly","lowImpact","safe"]},
+  // --- ELDERLY-SPECIFIC (Buku "Panduan Metode Gerak Lansia") — home, no equipment, sarcopenia & falls ---
+  {n_id:"Jalan kaki bertahap lansia (program pemula)", n_en:"Progressive walking for seniors (beginner program)", met:3.0, cat:"cardio", impact:"low", tags:["beginner","lowImpact","aerobic","elderly","safe","home","senior"]},
+  {n_id:"Squat kursi (berdiri-duduk dari kursi) 2 set x 10", n_en:"Chair squats (sit-to-stand) 2 sets x 10", met:3.5, cat:"strength", impact:"low", tags:["muscle","elderly","lowImpact","home","safe","senior"]},
+  {n_id:"Wall push-up (tekan dinding) 2 set x 10", n_en:"Wall push-ups 2 sets x 10", met:3.5, cat:"strength", impact:"low", tags:["muscle","elderly","lowImpact","home","safe","senior"]},
+  {n_id:"Angkat tumit (perkuat betis) 2 set x 15", n_en:"Heel raises (calf strengthening) 2 sets x 15", met:3.0, cat:"strength", impact:"low", tags:["muscle","elderly","lowImpact","home","safe","senior"]},
+  {n_id:"Peregangan lembut / fleksibilitas lansia", n_en:"Gentle stretching / flexibility for seniors", met:2.3, cat:"flexibility", impact:"low", tags:["flexibility","elderly","lowImpact","home","safe","senior"]},
+  // --- AGILITY (Bab 5) ---
+  {n_id:"Agility ladder", n_en:"Agility ladder drills", met:6.0, cat:"agility", impact:"high", tags:["agility","athletic"]},
+  {n_id:"Cone drill / shuttle run", n_en:"Cone drill / shuttle run", met:7.0, cat:"agility", impact:"high", tags:["agility","athletic","fatburn"]},
+  // --- POPULAR CLASSES (Bab 8, directly-measured kcal/min from indexed studies) ---
+  {n_id:"Zumba (kelas)", n_en:"Zumba (class)", kcalMin:9.5, cat:"cardio", impact:"moderate", tags:["aerobic","fatburn","class"]},
+  {n_id:"Body Combat (kelas)", n_en:"Body Combat (class)", kcalMin:9.7, cat:"cardio", impact:"moderate", tags:["aerobic","fatburn","class"]}
+];
+
+/* ============================================================
+   EXERCISE RECOMMENDATION ENGINE
+   Selects and calculates exercises strictly adjusted to:
+   BMI/obesity status, central obesity, diseases, medications &
+   drug-interaction flags, and the menu goal (maintain vs fat-loss/
+   muscle-gain). Evidence base: WHO 2020 PA guideline, ACSM position
+   stands, HIIT meta-analyses, Cochrane falls review (see references).
+============================================================ */
+
+// Weekly aerobic-minute target from WHO 2020 guideline (Bull FC et al.
+// Br J Sports Med 2020;54:1451-62; DOI 10.1136/bjsports-2020-102955):
+// 150-300 min/wk moderate aerobic + muscle strengthening >=2 d/wk.
+function exerciseWeeklyTarget(r){
+  // fat-loss/recomp pushes to the upper half of the WHO range; maintenance to the lower-mid.
+  const loss = (r.goalMode === 'loss') || r.recomp;
+  return {
+    aerobicMinLow:  loss ? 200 : 150,
+    aerobicMinHigh: loss ? 300 : 250,
+    strengthDays:   loss ? 3 : 2,          // ACSM: >=2 d/wk major muscle groups; recomp benefits from 3
+    note: loss ? 'fatloss' : 'maintain'
+  };
+}
+
+// Decide which safety profile applies from disease + medication flags.
+function exerciseSafety(r){
+  const d = r.diseases || {};
+  const f = r.flags || {};
+  const elderly = (r.age >= 60);
+  // High cardiovascular caution: recent MI/CAD, hemorrhagic or ischemic stroke,
+  // or uncontrolled hypertension context -> avoid high-impact & HIIT, screen first.
+  const cvHigh = !!(d.cad || d.stroke_h || d.stroke_i);
+  const htn = !!d.htn;
+  // Kidney disease or hyperkalemia risk: moderate, avoid maximal/high-intensity straining
+  // (Valsalva) which acutely raises BP/potassium shift; keep to low-moderate.
+  const renal = !!(f.kidney || f.hyperKrisk);
+  // Hypoglycemia risk (insulin/sulfonylurea): avoid prolonged fasting-state vigorous
+  // exercise without carb cover; keep moderate & advise glucose monitoring.
+  const hypoG = !!f.hypoG;
+  // Diabetes present (weight-bearing caution if neuropathy; default favor low-impact).
+  const dm = !!d.dm;
+  return {elderly, cvHigh, htn, renal, hypoG, dm,
+    avoidHighImpact: cvHigh || renal || elderly || htn,
+    avoidHIIT: cvHigh || renal || htn || elderly,
+    lowImpactPreferred: cvHigh || renal || elderly || dm || htn};
+}
+
+// Filter exercises by the safety profile.
+function exerciseAllowed(ex, safe){
+  if(safe.avoidHighImpact && ex.impact === 'high') return false;
+  if(safe.avoidHIIT && (ex.tags.indexOf('hiit')>=0)) return false;
+  // For clearly high-risk cardiovascular patients, exclude combat/very-vigorous classes
+  if(safe.cvHigh && ex.met && ex.met >= 10) return false;
+  return true;
+}
+
+// Score exercises for the goal + safety so the best-fit ones surface first.
+function exerciseScore(ex, r, safe){
+  let s = 0;
+  const loss = (r.goalMode === 'loss') || r.recomp;
+  if(loss){
+    if(ex.tags.indexOf('fatburn')>=0) s += 3;
+    if(ex.cat === 'strength' || ex.cat === 'endurance') s += 2; // preserve/gain muscle in a deficit
+    if(r.central && ex.tags.indexOf('fatburn')>=0) s += 1;      // central obesity: prioritize visceral-fat burners
+  } else {
+    if(ex.cat === 'cardio') s += 2;
+    if(ex.cat === 'strength') s += 2; // maintenance still needs >=2 d/wk strengthening
+    if(ex.tags.indexOf('aerobic')>=0) s += 1;
+  }
+  if(safe.lowImpactPreferred && ex.impact === 'low') s += 2;
+  if(safe.elderly && (ex.tags.indexOf('balance')>=0)) s += 3; // Cochrane: falls prevention
+  if(safe.elderly && ex.tags.indexOf('safe')>=0) s += 1;
+  // Elderly: strongly prioritize senior-specific home exercises (chair squats, wall push-ups,
+  // heel raises, gentle stretch, progressive walking) per "Panduan Metode Gerak Lansia".
+  if(safe.elderly && ex.tags.indexOf('senior')>=0) s += 4;
+  if(safe.elderly && ex.cat === 'strength' && ex.tags.indexOf('senior')>=0) s += 2; // sarcopenia
+  if(safe.dm && ex.impact === 'low') s += 1;
+  return s;
+}
+
+// kcal for a given exercise & duration (minutes) for this person's weight.
+function exerciseKcal(ex, weightKg, minutes){
+  if(ex.kcalMin) return Math.round(ex.kcalMin * minutes);          // directly-measured class
+  return Math.round(ex.met * weightKg * (minutes/60));             // MET x kg x hours
+}
+
+// Build a weekly exercise plan sized to help meet the calorie target.
+function buildExercisePlan(r){
+  const safe = exerciseSafety(r);
+  const tgt  = exerciseWeeklyTarget(r);
+  const w    = r.weight;
+
+  const pool = EXERCISES.filter(ex=>exerciseAllowed(ex, safe))
+                        .map(ex=>({ex, s:exerciseScore(ex, r, safe)}))
+                        .sort((a,b)=>b.s-a.s);
+
+  // Choose a small, varied set: aerobic picks + strength picks (+ balance & flexibility for elderly).
+  const aerobic = pool.filter(x=>['cardio','endurance','agility'].indexOf(x.ex.cat)>=0);
+  const strength = pool.filter(x=>x.ex.cat==='strength');
+  const balance = pool.filter(x=>x.ex.cat==='balance');
+  const flexibility = pool.filter(x=>x.ex.cat==='flexibility');
+
+  const pickN=(arr,n,seed)=>{
+    const out=[]; if(!arr.length) return out;
+    for(let i=0;i<n && i<arr.length;i++){ out.push(arr[(i + (seed||0)) % arr.length].ex); }
+    return out;
+  };
+  const seed = r._exSeed || 0;
+  const aPicks = pickN(aerobic, 3, seed);
+  const sPicks = pickN(strength, 2, seed);
+  // Elderly (>=60): the 4 pillars of senior movement (aerobic, strength, balance, flexibility)
+  // per "Panduan Metode Gerak Lansia": add balance (falls prevention) & flexibility (joint stiffness).
+  const bPicks = safe.elderly ? pickN(balance, 2, seed) : [];
+  const fPicks = safe.elderly ? pickN(flexibility, 1, seed) : [];
+
+  // Per-session aerobic minutes: split the weekly aerobic target across (aerobic days).
+  const aerobicDaysPerWeek = (tgt.note==='fatloss') ? 5 : 4;
+  const perSessionMin = Math.round(((tgt.aerobicMinLow+tgt.aerobicMinHigh)/2) / aerobicDaysPerWeek /5)*5;
+
+  const rows = [];
+  aPicks.forEach(ex=>{
+    rows.push({ex, minutes:perSessionMin, kcal:exerciseKcal(ex,w,perSessionMin), type:'aerobic'});
+  });
+  sPicks.forEach(ex=>{
+    rows.push({ex, minutes:30, kcal:exerciseKcal(ex,w,30), type:'strength'});
+  });
+  bPicks.forEach(ex=>{
+    rows.push({ex, minutes:15, kcal:exerciseKcal(ex,w,15), type:'balance'});
+  });
+  fPicks.forEach(ex=>{
+    rows.push({ex, minutes:10, kcal:exerciseKcal(ex,w,10), type:'flexibility'});
+  });
+
+  // Weekly & average daily kcal burned from the prescribed sessions.
+  const aerobicWeeklyKcal = aPicks.reduce((sum,ex)=>sum + exerciseKcal(ex,w,perSessionMin),0) * (aerobicDaysPerWeek / Math.max(1,aPicks.length));
+  const strengthWeeklyKcal = sPicks.reduce((sum,ex)=>sum + exerciseKcal(ex,w,30),0) * (tgt.strengthDays / Math.max(1,sPicks.length));
+  const balanceWeeklyKcal = bPicks.reduce((sum,ex)=>sum + exerciseKcal(ex,w,15),0) * (3 / Math.max(1,bPicks.length||1));
+  const flexWeeklyKcal = fPicks.reduce((sum,ex)=>sum + exerciseKcal(ex,w,10),0) * (7 / Math.max(1,fPicks.length||1)); // daily gentle stretch
+  const weeklyKcal = Math.round(aerobicWeeklyKcal + strengthWeeklyKcal + (bPicks.length?balanceWeeklyKcal:0) + (fPicks.length?flexWeeklyKcal:0));
+  const dailyAvgKcal = Math.round(weeklyKcal/7);
+
+  return {safe, tgt, rows, perSessionMin, aerobicDaysPerWeek,
+          strengthDays:tgt.strengthDays, weeklyKcal, dailyAvgKcal,
+          balanceIncluded: bPicks.length>0, flexibilityIncluded: fPicks.length>0,
+          elderly: safe.elderly};
+}
+
+/* ============================================================
+   EXERCISE RENDERING + ENERGY BALANCE
+============================================================ */
+function renderExercise(r){
+  try{
+    const m = t();
+    const plan = buildExercisePlan(r);
+    r._exPlan = plan;
+
+    // ----- Energy balance box -----
+    // Model (transparent):
+    //   BMR .......... basal energy (Pavlidou 2023)
+    //   TDEE ......... BMR x activity factor (baseline daily expenditure)
+    //   Menu target .. r.energy (TDEE adjusted for goal: deficit for loss, = TDEE for maintain)
+    //   Exercise ..... additional expenditure from the prescribed sessions (avg/day)
+    // For fat-loss: total expenditure (TDEE + exercise) exceeds intake (menu) -> deficit.
+    // For maintenance: exercise supports muscle & cardiometabolic health; intake balances expenditure.
+    const eb = document.getElementById('exEnergyBox');
+    const loss = (r.goalMode === 'loss') || r.recomp;
+    const intake = r.energy;                         // menu calories/day
+    const exDaily = plan.dailyAvgKcal;               // avg exercise burn/day
+    const totalOut = r.tdee + exDaily;               // total expenditure incl. exercise
+    const netBalance = intake - totalOut;            // <0 => deficit (fat loss)
+
+    let ebHtml = '';
+    ebHtml += '<div class="eb-row"><span>'+m.ebBMR+'</span><b>'+r.bmr+' '+m.kcalDay+'</b></div>';
+    ebHtml += '<div class="eb-row"><span>'+m.ebTDEE+'</span><b>'+r.tdee+' '+m.kcalDay+'</b></div>';
+    ebHtml += '<div class="eb-row"><span>'+m.ebIntake+'</span><b>'+intake+' '+m.kcalDay+'</b></div>';
+    ebHtml += '<div class="eb-row"><span>'+m.ebExercise+'</span><b>+'+exDaily+' '+m.kcalDay+'</b></div>';
+    ebHtml += '<div class="eb-row" style="border-top:1px dashed var(--gold);margin-top:4px;padding-top:6px;"><span><b>'+m.ebTotalOut+'</b></span><b>'+totalOut+' '+m.kcalDay+'</b></div>';
+    ebHtml += '<div class="eb-row"><span><b>'+m.ebNet+'</b></span><b>'+(netBalance>0?'+':'')+netBalance+' '+m.kcalDay+'</b></div>';
+    ebHtml += '<div style="margin-top:7px;font-size:12px;">'+(loss ? m.ebExplLoss : m.ebExplMaintain)+'</div>';
+    eb.innerHTML = ebHtml;
+
+    // ----- Exercise table grouped by type -----
+    const c = document.getElementById('exContent');
+    const impactLabel = {low:m.impLow, moderate:m.impMod, high:m.impHigh};
+    const impactCls = {low:'low', moderate:'mod', high:'high'};
+    const groups = [
+      {key:'aerobic', label:m.exAerobic},
+      {key:'strength', label:m.exStrength},
+      {key:'balance', label:m.exBalance},
+      {key:'flexibility', label:m.exFlexibility}
+    ];
+    let html = '';
+    groups.forEach(g=>{
+      const rows = plan.rows.filter(x=>x.type===g.key);
+      if(!rows.length) return;
+      const freq = g.key==='aerobic' ? (plan.aerobicDaysPerWeek+' '+m.exDaysWk)
+                 : g.key==='strength' ? (plan.strengthDays+' '+m.exDaysWk)
+                 : g.key==='flexibility' ? (m.exDaily||'setiap hari')
+                 : ('3 '+m.exDaysWk);
+      html += '<div class="ex-cat">'+g.label+' \u2014 '+freq+'</div>';
+      html += '<table class="ex-table"><thead><tr><th>'+m.exType+'</th><th>MET</th><th>'+m.exDur+'</th><th>'+m.exKcal+'</th></tr></thead><tbody>';
+      rows.forEach(row=>{
+        const nm = (LANG==='id') ? row.ex.n_id : row.ex.n_en;
+        const metTxt = row.ex.kcalMin ? (row.ex.kcalMin+' '+m.exKcalMin) : row.ex.met;
+        const imp = row.ex.impact || 'low';
+        html += '<tr><td>'+nm+' <span class="ex-badge '+impactCls[imp]+'">'+impactLabel[imp]+'</span></td>'+
+                '<td>'+metTxt+'</td><td>'+row.minutes+' '+m.exMin+'</td><td class="kcal">'+row.kcal+'</td></tr>';
+      });
+      html += '</tbody></table>';
+    });
+    c.innerHTML = html;
+
+    // ----- Safety note -----
+    const notes = [];
+    if(plan.safe.cvHigh) notes.push(m.exNoteCV);
+    if(plan.safe.htn) notes.push(m.exNoteHTN);
+    if(plan.safe.renal) notes.push(m.exNoteRenal);
+    if(plan.safe.hypoG) notes.push(m.exNoteHypoG);
+    if(plan.safe.dm) notes.push(m.exNoteDM);
+    if(plan.safe.elderly) notes.push(m.exNoteElderly);
+    notes.push(m.exNoteGeneral);
+    document.getElementById('exSafetyNote').innerHTML = notes.join(' ');
+
+    document.getElementById('exerciseCard').classList.remove('hidden');
+  }catch(e){ /* never block the app */ }
+}
+
+function regenerateExercise(){
+  if(!lastResult) return;
+  lastResult._exSeed = ((lastResult._exSeed||0) + 1) % 7;
+  renderExercise(lastResult);
+  const ec = document.getElementById('exerciseCard');
+  if(ec) ec.scrollIntoView({behavior:'smooth'});
+}
+
+// ===================== EVENT WIRING (no inline handlers; iOS-reliable) =====================
+
+function tap(el, fn){
+  if(!el) return;
+  // 'click' covers desktop + iOS taps; touch fallback ensures response on stubborn iOS contexts
+  el.addEventListener('click', function(ev){ fn(ev); });
+}
+function wireUp(){
+  try{
+    tap(document.getElementById('btnID'), function(){ setLang('id'); });
+    tap(document.getElementById('btnEN'), function(){ setLang('en'); });
+    tap(document.getElementById('btnCalc'), function(){ calculate(); });
+    tap(document.getElementById('btnReset'), function(){ resetAll(); });
+    tap(document.getElementById('btnPDF'), function(){ downloadPDF(); });
+    tap(document.getElementById('btnJPEG'), function(){ downloadJPEG(); });
+    tap(document.getElementById('btnRegen'), function(){ regenerateMenu(); });
+    tap(document.getElementById('btnRegenEx'), function(){ regenerateExercise(); });
+    var dob = document.getElementById('dob');
+    if(dob) dob.addEventListener('change', autoAge);
+    // disease toggles
+    var toggles = document.querySelectorAll('#diseaseToggles .toggle');
+    Array.prototype.forEach.call(toggles, function(el){
+      el.addEventListener('click', function(){ toggleDisease(el); });
+    });
+  }catch(e){
+    var err=document.getElementById('errMsg');
+    if(err){ err.textContent='Init error: '+(e&&e.message?e.message:e); err.classList.remove('hidden'); }
+  }
+}
+
+// init placeholders + wiring (run now if DOM ready, else on DOMContentLoaded)
+function initApp(){
+  try{ setLang('id'); }catch(e){}
+  wireUp();
+  try{ renderReferences(); }catch(e){}
+  // Show iPhone hint only on iOS (in case opened in a no-JS preview, this still renders as static HTML)
+  try{
+    if(isIOSDevice()){ var h=document.getElementById('iosHint'); if(h) h.style.display='block'; }
+  }catch(e){}
+}
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', initApp);
+}else{
+  initApp();
+}
+// surface unexpected errors instead of failing silently (helps on iOS)
+window.addEventListener('error', function(ev){
+  try{
+    var err=document.getElementById('errMsg');
+    if(err){ err.textContent=(typeof LANG!=='undefined'&&LANG==='id'?'Terjadi kesalahan: ':'An error occurred: ')+(ev.message||'unknown'); err.classList.remove('hidden'); }
+  }catch(_){}
+});
+</script>
+</body>
+</html>
